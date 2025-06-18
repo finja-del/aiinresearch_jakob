@@ -1,0 +1,16 @@
+# virtuelle Umgebung
+.venv/
+
+# Bytecode/Cache
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Umgebungsvariablen
+.env
+
+# OS-spezifisch
+.DS_Store
+Thumbs.db
