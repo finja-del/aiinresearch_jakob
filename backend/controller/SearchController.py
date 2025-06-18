@@ -28,10 +28,13 @@ class SearchController:
         self.apiClients = [scopus, openalex]
 
     def searchPapers(self, searchTerm: str) -> list[PaperDTO]:
-
         all_results: list[PaperDTO] = []
 
         for apiClient in self.apiClients:
-            all_results += apiClient.getPaperList(searchTerm)
+            source_name = apiClient.__class__.__name__.replace("Service", "")
+            results = apiClient.getPaperList(searchTerm)
+            print(f"🔍 {source_name} found {len(results)} papers.")
+            all_results += results
 
         return all_results
+
