@@ -9,3 +9,5 @@ query = "AI"
 
 # Starte die Suche
 print(controller.searchPapers(query))
+
+print ('hello world') #neu Finja
