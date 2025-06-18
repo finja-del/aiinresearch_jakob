@@ -15,16 +15,15 @@ class WOSService(PaperRestService):
     def __init__(self, ranking):
         load_dotenv()
         self.api_key = os.getenv('WOS_API_KEY')
-        self.base_url = "https://api.clarivate.com/api/wos"
+        self.base_url = "https://api.clarivate.com/apis/wos-starter/v1/documents"
         self.ranking = ranking #neu Finja
 
 
     def query(self, search_term: str) -> list[PaperDTO]:
         headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
         params = {
-            'databaseId': 'WOS',
-            'usrQuery': search_term,
-            'count': '25'
+            'db': 'WOK',
+            'q': f'TI={search_term}'
         }
 
         results: list[PaperDTO] = []
@@ -33,24 +32,25 @@ class WOSService(PaperRestService):
             response = requests.get(self.base_url, headers=headers, params=params)
             response.raise_for_status()
             data = response.json()
-            for record in data.get('Data', {}).get('Records', {}).get('records', []):
-                title = record.get('title', {}).get('value')
-                authors = ', '.join([a['full_name'] for a in record.get('authors', [])])
-                journal_info = record.get('source', {})
+            for result in data.get('resulsts', []):
+                doi = result.get('doi')
+                primary_location = result.get('primary_location', {})
+                source = result.get('host_venue', {})
 
                 results.append(PaperDTO(
-                    title=title or 'N/A',
-                    authors=authors or 'N/A',
-                    abstract=record.get('abstract', {}).get('value', 'N/A'),
-                    date=record.get('published', {}).get('date', '1900-01-01'),
-                    source='WOS',
+                   title=result.get('title', 'N/A'),
+                    authors=', '.join(
+                        a.get('author', {}).get('display_name', 'N/A') for a in result.get('authorships', [])),
+                    abstract=result.get('abstract', 'N/A'),
+                    date=result.get('publication_date', '1900-01-01'),
+                    source='OpenAlex',
                     quality_score=0.0,
-                    journal_name=journal_info.get('title'),
-                    issn=journal_info.get('issn'),
-                    eissn=journal_info.get('eissn'),
-                    doi=record.get('doi'),
-                    url=f"https://doi.org/{record.get('doi')}" if record.get('doi') else None,
-                    citations=record.get('times_cited', 0)
+                    journal_name=source.get('display_name'),
+                    issn=source.get('issn_l'),
+                    eissn=None,
+                    doi=doi,
+                    url=primary_location.get('url') or (f"https://doi.org/{doi}" if doi else None),
+                    citations=result.get('cited_by_count', 0)
                 ))
         except requests.exceptions.RequestException as e:
             print(f"[WOS API Fehler]: {e}")
