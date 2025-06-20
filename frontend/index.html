@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title>Web of Research</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+<header class="bg-gray-800 text-white px-6 py-4"></header>
+
+<div class="flex min-h-[calc(100vh-64px)]">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow p-6">
+        <h2 class="font-semibold text-lg mb-4">Filter</h2>
+
+        <!-- Jahr -->
+        <label class="block mb-2 text-sm font-medium">Jahr</label>
+        <select id="yearFilter" class="w-full mb-4 p-2 border rounded">
+            <option value="">Alle</option>
+            <option>2025</option>
+            <option>2024</option>
+            <option>2023</option>
+            <option>2022</option>
+        </select>
+
+        <!-- VHB -->
+        <p class="block mb-2 text-sm font-medium">VHB-Ranking</p>
+        <div id="vhbFilterGroup" class="mb-4">
+            <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="A+" /> A+</label>
+            <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="A" /> A</label>
+            <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="B" /> B</label>
+            <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="C" /> C</label>
+            <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="D" /> D</label>
+        </div>
+
+        <!-- Quellen -->
+        <p class="block mb-2 text-sm font-medium">Quellen</p>
+        <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex</label>
+        <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="Web of Science" checked /> Web of Science</label>
+        <label class="block mb-4"><input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus</label>
+
+        <!-- Sortierung -->
+        <h3 class="font-semibold text-lg mt-6 mb-2">Sortierung</h3>
+        <select id="sortOption" class="w-full mb-4 p-2 border rounded">
+            <option value="">Keine Sortierung</option>
+            <option value="newest">Neueste zuerst</option>
+            <option value="oldest">Älteste zuerst</option>
+        </select>
+
+        <button onclick="performSearch()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Anwenden</button>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-grow flex flex-col items-center justify-start p-8 relative">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Web of Research</h1>
+
+        <!-- Suchfeld -->
+        <div class="w-full max-w-2xl mb-10">
+            <div class="flex">
+                <input
+                        id="searchInput"
+                        type="text"
+                        placeholder="Suchbegriff eingeben..."
+                        class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-500"
+                />
+                <button
+                        onclick="performSearch()"
+                        class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700"
+                >
+                    Suchen
+                </button>
+            </div>
+        </div>
+
+        <!-- Ergebnisse -->
+        <div id="resultsContainer" class="w-full max-w-3xl space-y-4"></div>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
