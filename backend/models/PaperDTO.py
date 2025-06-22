@@ -19,8 +19,9 @@ class PaperDTO:
         self.citations = citations
         self.journal_quartile = journal_quartile
 
+    # Returns PaperDTO as a dictionary for CSV export
+    # This method is used to convert the object to a dictionary format suitable for CSV export
     def to_dict(self):
-        """Gibt das Paper als Dictionary zurück für CSV-Export"""
         return {
             'Title': self.title,
             'Authors': self.authors,
@@ -36,3 +37,23 @@ class PaperDTO:
             'Citations': self.citations if self.citations is not None else 'N/A',
             'Quartile': self.journal_quartile or 'N/A'
         }
+    
+    # API expects lowercase keys
+    # This method is used to convert the object to a dictionary format suitable for API responses
+    def to_api_dict(self):
+        return {
+            'title': self.title,
+            'authors': self.authors,
+            'abstract': self.abstract,
+            'date': self.date,
+            'source': self.source,
+            'quality_score': self.quality_score,
+            'journal_name': self.journal_name,
+            'issn': self.issn,
+            'eissn': self.eissn,
+            'doi': self.doi,
+            'url': self.url,
+            'citations': self.citations,
+            'journal_quartile': self.journal_quartile
+        }
+

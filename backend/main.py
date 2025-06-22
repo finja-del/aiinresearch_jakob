@@ -1,13 +1,17 @@
-from controller.SearchController import SearchController #neu Finja
-from models.Ranking import Ranking #neu Finja
+from flask import Flask
+from backend.controller.SearchController import search_blueprint, SearchController
 
-# Initialisierung des Controllers
-controller = SearchController() #neu Finja
+app = Flask(__name__)
+app.register_blueprint(search_blueprint)
 
-# Deine Suchanfrage
-query = "AI"
+if __name__ == "__main__":
+    # Optional: Run Flask web server
+    app.run(debug=True)
 
-# Starte die Suche
-print(controller.searchPapers(query))
+    # ✅ Local testing code: only runs when `main.py` is executed directly
+    print("Running startup test query...")
+    controller = SearchController()
+    query = "AI"
+    result = controller.searchPapers(query)
+    print("Test result:", result)
 
-print ('hello world') #neu Finja
