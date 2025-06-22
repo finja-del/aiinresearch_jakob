@@ -48,11 +48,13 @@ function renderYearChart(data) {
     });
   
     const allYears = Object.keys(yearCounts).map(Number).sort((a, b) => a - b);
-    const minYear = Math.min(...allYears);
+    const minYear = allYears.length > 0 ? Math.min(...allYears) : 1950; // Random low year for low range
     const maxYear = 2025;
   
     const yearFromInput = document.getElementById("yearFrom");
     const yearToInput = document.getElementById("yearTo");
+
+    
   
     // Eingabefelder vorbelegen, wenn leer
     if (!yearFromInput.value) yearFromInput.value = minYear;
@@ -178,7 +180,7 @@ async function performSearch() {
         <div class="bg-white border border-gray-200 p-4 rounded-lg shadow-sm">
           <h2 class="text-xl font-semibold text-blue-800">${result.title}</h2>
           <p class="text-sm text-gray-700">
-            Autoren: ${result.authors?.join(", ") || "unbekannt"} |
+            Autoren: ${Array.isArray(result.authors) ? result.authors.join(", ") : result.authors || "unbekannt"}
             Jahr: ${result.date?.split("-")[0] || "—"} |
             VHB: ${result.journal_quartile || "N/A"} |
             Quelle: ${result.source || "—"}

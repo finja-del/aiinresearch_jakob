@@ -39,7 +39,7 @@ class OpenAlexService(PaperRestService):
                     issn=source.get('issn_l'),
                     eissn=None,
                     doi=doi,
-                    url=primary_location.get('url') or (f"https://doi.org/{doi}" if doi else None),
+                    url = (primary_location.get('url') if primary_location else None) or (f"https://doi.org/{doi}" if doi else None),   
                     citations=result.get('cited_by_count', 0)
                 ))
         except requests.exceptions.RequestException as e:

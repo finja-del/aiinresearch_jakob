@@ -13,10 +13,14 @@ search_blueprint = Blueprint("search_api", __name__)
 # 🔹 API route outside the class
 @search_blueprint.route("/api/search", methods=["GET"])
 def search_route():
-    query = request.args.get("q", "")
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify([])
+
     controller = SearchController()
     results = controller.searchPapers(query)
     return jsonify(results)
+
 
 # 🔹 SearchController class
 class SearchController:
