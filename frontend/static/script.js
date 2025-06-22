@@ -1,3 +1,5 @@
+console.log("📦 script.js loaded"); //To verify it's loading
+
 let publicationData = [];
 let yearChart;
 let selectedYear = "";
