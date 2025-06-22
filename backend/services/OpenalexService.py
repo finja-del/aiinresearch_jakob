@@ -26,7 +26,7 @@ class OpenAlexService(PaperRestService):
                 doi = result.get('doi')
                 primary_location = result.get('primary_location', {})
                 source = result.get('host_venue', {})
-
+                
                 results.append(PaperDTO(
                     title=result.get('title', 'N/A'),
                     authors=', '.join(
@@ -42,6 +42,12 @@ class OpenAlexService(PaperRestService):
                     url=primary_location.get('url') or (f"https://doi.org/{doi}" if doi else None),
                     citations=result.get('cited_by_count', 0)
                 ))
+
+                title=result.get('title', 'N/A')
+                issn=source.get('issn_l')
+                citations=result.get('cited_by_count', 0)
+                print(f"📄 Titel: {title} | DOI: {doi} | ISSN: {issn} | Citations: {citations}")
+
         except requests.exceptions.RequestException as e:
             print(f"[OpenAlex API Fehler]: {e}")
         return results
