@@ -1,33 +1,41 @@
-import os #neu Finja
-from services.ScopusService import ScopusService #neu Finja
-from services.OpenalexService import OpenAlexService #neu Finja
-from services.WosService import WOSService #neu Finja
-from services.PaperRestService import PaperRestService #neu Finja
+import os
+from flask import Blueprint, request, jsonify
 
-from models.PaperDTO import PaperDTO #neu Finja
-from models.Ranking import Ranking #neu Finja
+from services.ScopusService import ScopusService
+from services.OpenalexService import OpenAlexService
+from services.WosService import WOSService
+from services.PaperRestService import PaperRestService
 
+from models.PaperDTO import PaperDTO
+from models.Ranking import Ranking
 
+# 🔹 Define the blueprint
+search_blueprint = Blueprint("search_api", __name__)
+
+# 🔹 API route outside the class
+@search_blueprint.route("/api/search", methods=["GET"])
+def search_route():
+    query = request.args.get("q", "")
+    controller = SearchController()
+    results = controller.searchPapers(query)
+    return jsonify(results)
+
+# 🔹 SearchController class
 class SearchController:
     apiClients: list[PaperRestService]
 
     def __init__(self):
+        base_path = os.path.dirname(__file__)
+        csv_path = os.path.join(base_path, '..', 'data', 'abc_ranking.csv')
+        self.abc_ranking = Ranking(csv_path)
 
-        base_path = os.path.dirname(__file__)  # ← liegt in controller/ #neu Finja
-        csv_path = os.path.join(base_path, '..', 'data', 'abc_ranking.csv') #neu Finja
-        self.abc_ranking = Ranking(csv_path) #neu Finja
-
-        # self.config = config
-        # self.journal_data = load_journal_ratings(config['rating_file'])
-
-        # API-Clients initialisieren
-        scopus = ScopusService(self.abc_ranking) #neu Finja
-        openalex = OpenAlexService(self.abc_ranking) #neu Finja
-        #TODO check API key wos = WOSService()
+        scopus = ScopusService(self.abc_ranking)
+        openalex = OpenAlexService(self.abc_ranking)
+        # TODO: Add WOSService when ready
 
         self.apiClients = [scopus, openalex]
 
-    def searchPapers(self, searchTerm: str) -> list[PaperDTO]:
+    def searchPapers(self, searchTerm: str) -> list[dict]:
         all_results: list[PaperDTO] = []
 
         for apiClient in self.apiClients:
@@ -36,5 +44,4 @@ class SearchController:
             print(f"🔍 {source_name} found {len(results)} papers.")
             all_results += results
 
-        return all_results
-
+        return [paper.to_api_dict() for paper in all_results]

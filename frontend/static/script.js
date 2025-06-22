@@ -4,7 +4,8 @@ let selectedYear = "";
 let yearRange = { from: "", to: "" };
 
 async function init() {
-  publicationData = await loadCSVData();
+  const response = await axios.get("/api/search?q=");
+  publicationData = response.data;
   renderYearChart(publicationData);
   performSearch();
 }
@@ -102,7 +103,6 @@ function renderYearChart(data) {
       }
     });
   }
-  
 
 function updateYearRange() {
   yearRange.from = document.getElementById("yearFrom").value;
@@ -123,89 +123,79 @@ function resetYearFilter() {
   performSearch();
 }
 
-function performSearch() {
-    const query = document.getElementById("searchInput").value.toLowerCase();
-    const sortOption = document.getElementById("sortOption").value;
-  
-    // Gruppenfilter (VHB + ABDC)
-    const selectedGroups = [
-      ...document.querySelectorAll(".vhbCheckbox"),
-      ...document.querySelectorAll(".abdcCheckbox")
-    ]
-      .filter(cb => cb.checked)
-      .map(cb => cb.value);
-  
-    // Quellenfilter
-    const selectedSources = Array.from(document.querySelectorAll(".sourceCheckbox"))
-      .filter(cb => cb.checked)
-      .map(cb => cb.value);
-  
-    const yearFrom = document.getElementById("yearFrom").value;
-    const yearTo = document.getElementById("yearTo").value;
-  
-    const container = document.getElementById("resultsContainer");
-    container.innerHTML = "";
-  
-    const filtered = publicationData.filter(item => {
-      const searchableText = `
-        ${item.Title || ""}
-        ${item.Authors || ""}
-        ${item.Source || ""}
-      `.toLowerCase();
-  
-      const year = item.Date?.split("-")[0];
-  
-      const inRange =
-        (!yearFrom || year >= yearFrom) &&
-        (!yearTo || year <= yearTo);
-  
-      const matchesYear = !selectedYear || year === selectedYear;
-  
-      const groupMap = {
-        "A+/A": ["A+", "A"],
-        "B/C": ["B", "C"],
-        "D": ["D"],
-        "A*/A": ["A*", "A"]
-      };
-  
-      const matchesVhb =
-        selectedGroups.length === 0 ||
-        selectedGroups.some(group => groupMap[group]?.includes(item.VHB));
-  
-      const matchesSource = selectedSources.includes(item.Source);
-      const matchesQuery = searchableText.includes(query);
-  
-      return matchesQuery && matchesYear && inRange && matchesVhb && matchesSource;
+async function performSearch() {
+  const query = document.getElementById("searchInput").value.trim();
+  const sortOption = document.getElementById("sortOption").value;
+
+  const selectedGroups = [
+    ...document.querySelectorAll(".vhbCheckbox"),
+    ...document.querySelectorAll(".abdcCheckbox")
+  ]
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+
+  const selectedSources = Array.from(document.querySelectorAll(".sourceCheckbox"))
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+
+  const yearFrom = document.getElementById("yearFrom").value;
+  const yearTo = document.getElementById("yearTo").value;
+
+  const container = document.getElementById("resultsContainer");
+  container.innerHTML = "<p class='text-gray-600'>Suche läuft...</p>";
+
+  try {
+    // Compose query string
+    const params = new URLSearchParams({
+      q: query,
+      year_from: yearFrom,
+      year_to: yearTo,
+      source: selectedSources.join(","),
+      group: selectedGroups.join(",")
     });
-  
-    // Sortierung
-    if (sortOption === "newest") {
-      filtered.sort((a, b) => new Date(b.Date) - new Date(a.Date));
-    }
-    if (sortOption === "oldest") {
-      filtered.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-    }
-  
-    // Anzeige
-    if (filtered.length === 0) {
+
+    const response = await axios.get(`/api/search?${params.toString()}`);
+    const data = response.data;
+
+    if (data.length === 0) {
       container.innerHTML = "<p class='text-gray-500 text-center'>Keine Ergebnisse gefunden.</p>";
       return;
     }
-  
-    filtered.forEach(result => {
+
+    // Optional: Sort here if backend doesn't do it
+    if (sortOption === "newest") {
+      data.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (sortOption === "oldest") {
+      data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    // Render
+    container.innerHTML = "";
+    data.forEach(result => {
       container.innerHTML += `
         <div class="bg-white border border-gray-200 p-4 rounded-lg shadow-sm">
-          <h2 class="text-xl font-semibold text-blue-800">${result.Title}</h2>
+          <h2 class="text-xl font-semibold text-blue-800">${result.title}</h2>
           <p class="text-sm text-gray-700">
-            Autoren: ${result.Authors || 'unbekannt'} |
-            Jahr: ${result.Date?.split('-')[0] || '—'} |
-            VHB: ${result.VHB || 'N/A'} |
-            Quelle: ${result.Source || '—'}
+            Autoren: ${result.authors?.join(", ") || "unbekannt"} |
+            Jahr: ${result.date?.split("-")[0] || "—"} |
+            VHB: ${result.journal_quartile || "N/A"} |
+            Quelle: ${result.source || "—"}
           </p>
+          <p class="text-sm mt-2">${result.abstract || "Kein Abstract vorhanden."}</p>
         </div>
       `;
     });
+
+    // Optional: Save for chart rendering
+    publicationData = data;
+    renderYearChart(publicationData);
+
+  } catch (err) {
+    console.error("Fehler bei der Suche:", err);
+    container.innerHTML = "<p class='text-red-500'>Fehler bei der Suche. Bitte später erneut versuchen.</p>";
   }
+}
+
   
 
 function updateYearRange() {
