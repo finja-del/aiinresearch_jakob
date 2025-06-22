@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import date
-from models.PaperDTO import PaperDTO
+from backend.models.PaperDTO import PaperDTO
 
 class PaperRestService(ABC):
 

@@ -196,8 +196,6 @@ async function performSearch() {
   }
 }
 
-  
-
 function updateYearRange() {
     yearRange.from = document.getElementById("yearFrom").value;
     yearRange.to = document.getElementById("yearTo").value;

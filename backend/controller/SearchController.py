@@ -1,13 +1,11 @@
+from backend.services.ScopusService import ScopusService
+from backend.services.OpenalexService import OpenAlexService
+from backend.services.WosService import WOSService
+from backend.services.PaperRestService import PaperRestService
+from backend.models.PaperDTO import PaperDTO
+from backend.models.Ranking import Ranking
 import os
 from flask import Blueprint, request, jsonify
-
-from services.ScopusService import ScopusService
-from services.OpenalexService import OpenAlexService
-from services.WosService import WOSService
-from services.PaperRestService import PaperRestService
-
-from models.PaperDTO import PaperDTO
-from models.Ranking import Ranking
 
 # 🔹 Define the blueprint
 search_blueprint = Blueprint("search_api", __name__)

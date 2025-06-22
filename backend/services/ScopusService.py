@@ -5,8 +5,8 @@ from datetime import date
 import requests
 from dotenv import load_dotenv
 
-from services.PaperRestService import PaperRestService
-from models.PaperDTO import PaperDTO
+from backend.services.PaperRestService import PaperRestService
+from backend.models.PaperDTO import PaperDTO
 
 class ScopusService(PaperRestService):
 
