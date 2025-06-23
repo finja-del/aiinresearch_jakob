@@ -1,69 +1,85 @@
 # services/scopus_service.py
 # Scopus-API-Abfrage mit Fehlerbehandlung
 import os
-from datetime import date
+from typing import Optional
+from urllib.parse import quote_plus
 import requests
 from dotenv import load_dotenv
-
+from backend.models.FilterCriteria import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 
 class ScopusService(PaperRestService):
 
-    def __init__(self, abc_ranking): #neu Finja
+    def __init__(self, abc_ranking):  # neu Finja
         load_dotenv()
         self.api_key = os.getenv('SCOPUS.APIKEY')
         self.base_url = "https://api.elsevier.com/content/search/scopus"
-        self.abc_ranking = abc_ranking #neu Finja
+        self.abc_ranking = abc_ranking  # neu Finja
 
-    def query(self, search_term: str) -> list[PaperDTO]:
-        headers = {'X-ELS-APIKey': self.api_key}
-        params = {'query': search_term, 'count': '25'}
+    def build_query(self, search_term: str, filters: Optional[FilterCriteria]) -> str:
+        query_parts = [f"TITLE({search_term})"]
 
-        try:
-            response = requests.get(self.base_url, headers=headers, params=params)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            print(f"[Scopus API Fehler]: {e}")
-            return []
+        if filters:
+            if filters.start_date:
+                query_parts.append(f"PUBYEAR > {filters.start_year}")
+            if filters.end_date:
+                query_parts.append(f"PUBYEAR < {filters.end_year}")
+            if filters.author:
+                query_parts.append(f"AUTHNAME({filters.author})")
+            if filters.language:
+                query_parts.append(f"LANGUAGE({filters.language})")
 
-        data = response.json()
-        entries = data.get('search-results', {}).get('entry', [])
-        if not entries:
-            print("🔍 Scopus liefert keine Treffer für diesen Suchbegriff.")
-            return []
+
+        return " AND ".join(query_parts)
+
+    def query(self, search_term: str, filters: Optional[FilterCriteria]) -> list[PaperDTO]:
+        query_string = self.build_query(search_term, filters)
+        print(f"[DEBUG] Query: {query_string}")
+
+        params = {
+            "query": query_string,
+            "count": "25",
+        }
+
+        encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=25"
+        print(f"[DEBUG] Manuell zusammengesetzte URL: {encoded_url}")
+
+        headers = {
+            "X-ELS-APIKey": self.api_key,
+            "Accept": "application/json"
+        }
 
         results: list[PaperDTO] = []
 
-        for entry in entries:
-            title = entry.get('dc:title', 'N/A')
-            authors = entry.get('dc:creator', 'N/A')
-            abstract = entry.get('dc:description', 'N/A')
-            date = entry.get('prism:coverDate', '1900-01-01')
-            journal_name = entry.get('prism:publicationName')
-            issn = entry.get('prism:issn') or entry.get('prism:eIssn')
-            doi = entry.get('prism:doi')
-            citations = int(entry.get('citedby-count', 0))
-            url = f"https://doi.org/{doi}" if doi else None
-            abc_ranking = self.abc_ranking.match_ranking(journal_name) #neu Finja
+        try:
+            response = requests.get(encoded_url, headers=headers)
+            print(f"[DEBUG] Response Code: {response.status_code}")
+            response.raise_for_status()
+            data = response.json()
+            print("[DEBUG] Results gefunden:", len(data.get("search-results", {}).get("entry", [])))
 
-            print(f"📄 Titel: {title} | DOI: {doi} | ISSN: {issn} | Citations: {citations}")
+            for result in data.get("search-results", {}).get("entry", []):
+                journal_name = result.get("prism:publicationName", "N/A")
+                abc_ranking = self.abc_ranking.match_ranking(journal_name)
+                results.append(PaperDTO(
+                    title=result.get("dc:title", "N/A"),
+                    authors=result.get("dc:creator", "N/A"),
+                    abstract=result.get("dc:description", "N/A"),
+                    date=result.get("prism:coverDate", "1900-01-01"),
+                    source="Scopus",
+                    quality_score=abc_ranking,
+                    journal_name=result.get("prism:publicationName", "N/A"),
+                    issn=result.get("prism:issn"),
+                    eissn=result.get("prism:eIssn"),
+                    doi=result.get("prism:doi"),
+                    url=result.get("prism:url"),
+                    citations=int(result.get("citedby-count", 0))
+                ))
+        except requests.exceptions.RequestException as e:
+            print(f"[Scopus API Fehler]: {e}")
 
-            results.append(PaperDTO(
-                title=title,
-                authors=authors,
-                abstract=abstract,
-                date=date,
-                source='Scopus',
-                quality_score=abc_ranking, #neu Finja
-                journal_name=journal_name,
-                issn=issn.replace('-', '') if issn else None,
-                eissn=None,
-                doi=doi,
-                url=url,
-                citations=citations
-            ))
         return results
 
-    def getPaperList(self, searchTerm: str) -> list[PaperDTO]:
-        return self.query(searchTerm)
+    def getPaperList(self, searchTerm: str, filters: FilterCriteria) -> list[PaperDTO]:
+        return self.query(searchTerm, filters)

@@ -5,6 +5,8 @@
 import requests
 import os
 from datetime import date
+from typing import List
+from backend.models import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 from dotenv import load_dotenv
@@ -19,42 +21,72 @@ class WOSService(PaperRestService):
         self.ranking = ranking #neu Finja
 
 
-    def query(self, search_term: str) -> list[PaperDTO]:
-        headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
-        params = {
-            'db': 'WOK',
-            'q': f'TI={search_term}'
+    def build_query(self, search_term: str, filters: FilterCriteriaDTO) -> str:
+        query_parts = [f"TS=({search_term})"]  # TS = Topic search in WoS
+
+        if filters.start_year and filters.end_year:
+            query_parts.append(f"PY=({filters.start_year}-{filters.end_year})")
+        elif filters.start_year:
+            query_parts.append(f"PY=({filters.start_year}-*)")
+        elif filters.end_year:
+            query_parts.append(f"PY=(1900-{filters.end_year})")
+
+        if filters.author:
+            query_parts.append(f"AU=({filters.author})")
+        if filters.language:
+            query_parts.append(f"LA=({filters.language})")
+
+        return " AND ".join(query_parts)
+
+    def query(self, search_term: str, filters: FilterCriteriaDTO) -> List[PaperDTO]:
+        query_string = self.build_query(search_term, filters)
+        print(f"[DEBUG] WoS Query: {query_string}")
+
+        headers = {
+            "X-ApiKey": self.api_key,
+            "Accept": "application/json"
         }
 
-        results: list[PaperDTO] = []
+        params = {
+            "databaseId": "WOK",
+            "usrQuery": query_string,
+            "count": 25
+        }
 
         try:
             response = requests.get(self.base_url, headers=headers, params=params)
+            print(f"[DEBUG] URL: {response.url}")
             response.raise_for_status()
             data = response.json()
-            for result in data.get('resulsts', []):
-                doi = result.get('doi')
-                primary_location = result.get('primary_location', {})
-                source = result.get('host_venue', {})
+            entries = data.get("Data", {}).get("Records", {}).get("records", [])
+
+            results = []
+            for record in entries:
+                static_data = record.get("static_data", {})
+                summary = static_data.get("summary", {})
+                titles = summary.get("titles", {}).get("title", [])
+                title = titles[0].get("content") if titles else "N/A"
+                source = summary.get("source", {}).get("source_title", "")
 
                 results.append(PaperDTO(
-                   title=result.get('title', 'N/A'),
-                    authors=', '.join(
-                        a.get('author', {}).get('display_name', 'N/A') for a in result.get('authorships', [])),
-                    abstract=result.get('abstract', 'N/A'),
-                    date=result.get('publication_date', '1900-01-01'),
-                    source='OpenAlex',
+                    title=title,
+                    authors="; ".join(a.get("full_name") for a in static_data.get("contributors", {}).get("authors", {}).get("author", [])),
+                    abstract=static_data.get("abstracts", {}).get("abstract", {}).get("abstract_text", "N/A"),
+                    date=summary.get("pub_info", {}).get("pubyear", "1900"),
+                    source="WOS",
                     quality_score=0.0,
-                    journal_name=source.get('display_name'),
-                    issn=source.get('issn_l'),
+                    journal_name=source,
+                    issn=summary.get("pub_info", {}).get("issn", None),
                     eissn=None,
-                    doi=doi,
-                    url=primary_location.get('url') or (f"https://doi.org/{doi}" if doi else None),
-                    citations=result.get('cited_by_count', 0)
+                    doi=summary.get("doi", {}).get("content", None),
+                    url=None,
+                    citations=summary.get("pub_info", {}).get("times_cited", 0)
                 ))
+            return results
+
         except requests.exceptions.RequestException as e:
             print(f"[WOS API Fehler]: {e}")
-        return results
+            return []
 
-    def getPaperList(self, searchTerm: str) -> list[PaperDTO]:
-        return self.query(searchTerm)
+    def getPaperList(self, searchTerm: str, filters: FilterCriteriaDTO) -> list[PaperDTO]:
+        return self.query(searchTerm, filters)

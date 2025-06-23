@@ -1,13 +1,15 @@
-from controller.SearchController import SearchController #neu Finja
-from models.Ranking import Ranking #neu Finja
+from backend.controller.SearchController import SearchController
+from backend.models.FilterCriteria import FilterCriteria
+import json
+from dataclasses import asdict
 
-# Initialisierung des Controllers
-controller = SearchController() #neu Finja
+# Set Filters
+filters = FilterCriteria()   #Filterkriterien initialisieren
+searchterm = "artificial intelligence"  # Beispiel Suchbegriff
 
-# Deine Suchanfrage
-query = "AI"
 
-# Starte die Suche
-print(controller.searchPapers(query))
+controller = SearchController()
 
-print ('hello world') #neu Finja
+paper_list = controller.searchPapers(searchterm, filters)
+
+print(json.dumps([paper.__dict__ for paper in paper_list], indent=2))
