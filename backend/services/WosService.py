@@ -30,28 +30,39 @@ class WOSService(PaperRestService):
 
         try:
             response = requests.get(self.base_url, headers=headers, params=params)
+        
             response.raise_for_status()
             data = response.json()
-            for result in data.get('resulsts', []):
-                doi = result.get('doi')
-                primary_location = result.get('primary_location', {})
-                source = result.get('host_venue', {})
+            hits = data.get("hits", [])
+            authors =[]
+            for hit in hits:
+                title = hit.get('title',{})
+                doi = hit.get('identifiers',{}).get('doi')
+                for author in hit.get('names',{}).get('authors'):
+                    authors.append(author.get('displayName'))
+                citation = hit.get("citations",[])[0].get('count')
+                journal = hit.get('source',{}).get('sourceTitle')
+                year = hit.get('source',{}).get('publishYear')
+                eissn = hit.get('identifiers',{}).get('eissn')
+                issn = hit.get('identifiers',{}).get('issn')
+                print(f"Title:{title}   Author/en:{authors}    Citations:{citation}   doi:{doi}  \n  year:{year}  journal:{journal}")
 
                 results.append(PaperDTO(
-                   title=result.get('title', 'N/A'),
-                    authors=', '.join(
-                        a.get('author', {}).get('display_name', 'N/A') for a in result.get('authorships', [])),
-                    abstract=result.get('abstract', 'N/A'),
-                    date=result.get('publication_date', '1900-01-01'),
-                    source='OpenAlex',
+                   title=title or 'N/A',
+                    authors=authors or 'N/A',
+                    abstract='',
+                    date=year,
+                    source ='WOK',
                     quality_score=0.0,
-                    journal_name=source.get('display_name'),
-                    issn=source.get('issn_l'),
-                    eissn=None,
+                    journal_name=journal,
+                    issn=issn,
+                    eissn=eissn,
                     doi=doi,
-                    url=primary_location.get('url') or (f"https://doi.org/{doi}" if doi else None),
-                    citations=result.get('cited_by_count', 0)
+                    url='',
+                    citations= citation
                 ))
+                
+                
         except requests.exceptions.RequestException as e:
             print(f"[WOS API Fehler]: {e}")
         return results

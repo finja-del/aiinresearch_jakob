@@ -23,9 +23,10 @@ class SearchController:
         # API-Clients initialisieren
         scopus = ScopusService(self.abc_ranking) #neu Finja
         openalex = OpenAlexService(self.abc_ranking) #neu Finja
+        wos= WOSService(self.abc_ranking)
         #TODO check API key wos = WOSService()
 
-        self.apiClients = [scopus, openalex]
+        self.apiClients = [scopus, openalex,wos]
 
     def searchPapers(self, searchTerm: str) -> list[PaperDTO]:
         all_results: list[PaperDTO] = []
