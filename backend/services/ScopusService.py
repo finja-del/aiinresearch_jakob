@@ -6,8 +6,8 @@ from urllib.parse import quote_plus
 import requests
 from dotenv import load_dotenv
 from backend.models.FilterCriteria import FilterCriteria
-from backend.services.PaperRestService import PaperRestService
-from backend.models.PaperDTO import PaperDTO
+from services.PaperRestService import PaperRestService
+from models.PaperDTO import PaperDTO
 
 class ScopusService(PaperRestService):
 
