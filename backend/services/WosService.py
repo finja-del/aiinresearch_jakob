@@ -5,8 +5,8 @@
 import requests
 import os
 from datetime import date
-from services.PaperRestService import PaperRestService
-from models.PaperDTO import PaperDTO
+from backend.services.PaperRestService import PaperRestService
+from backend.models.PaperDTO import PaperDTO
 from dotenv import load_dotenv
 
 

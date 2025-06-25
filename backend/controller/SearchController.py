@@ -1,5 +1,5 @@
 import os #neu Finja
-from distutils.command.check import check
+#from distutils.command.check import check
 from typing import List
 
 from backend.models.FilterCriteria import FilterCriteria
