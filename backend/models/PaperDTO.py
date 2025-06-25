@@ -1,5 +1,3 @@
-# models/paper.py
-# Diese Datei definiert die Paper-Datenstruktur zur zentralen Verwaltung aller Felder
 
 class PaperDTO:
     def __init__(self, title, authors, abstract, date, source, quality_score,
