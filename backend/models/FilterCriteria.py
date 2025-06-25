@@ -9,8 +9,8 @@ class FilterCriteria:
         openalex: bool = False,
         language: Optional[str] = None,
         author: Optional[str] = None,
-        start_year: Optional[int] = 2022,
-        end_year: Optional[int] = 2024,
+        start_year: Optional[int] = None,
+        end_year: Optional[int] = None,
     ):
         self.scopus = scopus
         self.wos = wos
