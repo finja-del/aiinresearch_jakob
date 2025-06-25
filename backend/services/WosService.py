@@ -19,7 +19,7 @@ class WOSService(PaperRestService):
         self.ranking = ranking #neu Finja
 
 
-    def query(self, search_term: str) -> list[PaperDTO]:
+    def query(self, search_term: str, filters) -> list[PaperDTO]:
         headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
         params = {
             'db': 'WOK',
@@ -51,7 +51,7 @@ class WOSService(PaperRestService):
                    title=title or 'N/A',
                     authors=authors or 'N/A',
                     abstract='',
-                    date=year,
+                    date=str(year) if year else "1900",
                     source ='WOK',
                     quality_score=0.0,
                     journal_name=journal,
@@ -67,5 +67,5 @@ class WOSService(PaperRestService):
             print(f"[WOS API Fehler]: {e}")
         return results
 
-    def getPaperList(self, searchTerm: str) -> list[PaperDTO]:
-        return self.query(searchTerm)
+    def getPaperList(self, searchTerm: str, filters) -> list[PaperDTO]:
+        return self.query(searchTerm, filters)
