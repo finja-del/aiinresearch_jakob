@@ -1,48 +1,26 @@
-from flask import Flask, send_from_directory
-import os
-from backend.controller.SearchController import search_blueprint, SearchController
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from backend.controller.SearchController import router as search_router
 
-app = Flask(
-    __name__,
-    static_folder="frontend/static",
-    template_folder="frontend"
-)
-app.register_blueprint(search_blueprint)
+app = FastAPI()
 
+# Mount frontend static files
+app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
-@app.route("/")
-def home():
-    return send_from_directory("frontend", "index.html")
+# HTML routes (basic file responses)
+@app.get("/")
+async def home():
+    return FileResponse("frontend/index.html")
 
-@app.route("/search")
-def search():
-    return send_from_directory("frontend", "search.html")
+@app.get("/search")
+async def search():
+    return FileResponse("frontend/search.html")
 
-# #ggf löschen nach merge
-# # Set Filters
-# filters = FilterCriteria()   #Filterkriterien initialisieren
-# searchterm = "artificial intelligence"  # Beispiel Suchbegriff
+# Include search API routes
+app.include_router(search_router, prefix="/api")
 
-
-# controller = SearchController()
-
-# paper_list = controller.searchPapers(searchterm, filters)
-
-# print(json.dumps([paper.__dict__ for paper in paper_list], indent=2))
-
+# For local testing
 if __name__ == "__main__":
-    # # ✅ Local testing code: only runs when `main.py` is executed directly
-    # print("Running startup test query...")
-    # controller = SearchController()
-    # query = "AI"
-    # result = controller.searchPapers(query)
-    # print("Test result:", result)
-
-    # Optional: Run Flask web server
-    app.run(debug=True)
-
-
-
-
-    
-
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
