@@ -15,7 +15,7 @@ class ScopusService(PaperRestService):
         load_dotenv()
         self.api_key = os.getenv('SCOPUS.APIKEY')
         self.base_url = "https://api.elsevier.com/content/search/scopus"
-        self.abc_ranking = abc_ranking  # neu Finja
+        self.abc_ranking = abc_ranking  # neu Finja # Fehler Frage: soll hier jz der Ranking score oder die Ranking daten gespeichert werden??
 
     def build_query(self, search_term: str, filters: Optional[FilterCriteria]) -> str:
         query_parts = [f"TITLE({search_term})"]
@@ -61,14 +61,14 @@ class ScopusService(PaperRestService):
 
             for result in data.get("search-results", {}).get("entry", []):
                 journal_name = result.get("prism:publicationName", "N/A")
-                abc_ranking = self.abc_ranking.match_ranking(journal_name)
+                abc_ranking = self.abc_ranking.match_ranking(journal_name) # Fehler Frage: vllt passt das von der Funktionalität und den Daten dann doch, aber die VariablenBennenung (so ähnlich trotz unterschiedlicher Typen) ist evtl verwirrend
                 results.append(PaperDTO(
                     title=result.get("dc:title", "N/A"),
                     authors=result.get("dc:creator", "N/A"),
                     abstract=result.get("dc:description", "N/A"),
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
-                    quality_score=abc_ranking,
+                    quality_score=abc_ranking, # hier noch Fehler, welcher Datentyp ist abc_ranking??
                     journal_name=result.get("prism:publicationName", "N/A"),
                     issn=result.get("prism:issn"),
                     eissn=result.get("prism:eIssn"),
