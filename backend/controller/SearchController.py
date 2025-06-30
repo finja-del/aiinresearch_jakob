@@ -6,7 +6,7 @@ from backend.services.WosService import WOSService
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 from backend.models.Ranking import Ranking
-from backend.models.FilterCriteria import FilterCriteria
+from backend.models.FilterCriteria import FilterCriteria, FilterCriteriaIn
 import os
 
 
@@ -18,8 +18,8 @@ router = APIRouter()
 def search_route(
     q: str = Query(..., alias="q"),
     source: Optional[str] = Query(None),
-    language: Optional[str] = None,
-    author: Optional[str] = None,
+    # language: Optional[str] = None,
+    # author: Optional[str] = None,
     year_from: Optional[int] = Query(None, alias="year_from"),
     year_to: Optional[int] = Query(None, alias="year_to")
 ):
@@ -31,8 +31,8 @@ def search_route(
         scopus="scopus" in sources,
         wos="web of science" in sources,
         openalex="openalex" in sources,
-        language=language,
-        author=author,
+        # language=language,
+        # author=author,
         start_year=year_from,
         end_year=year_to
     )
@@ -41,7 +41,26 @@ def search_route(
     results = controller.searchPapers(q, filters)
     return results
 
+# 🔹 API route for POST requests
+@router.post("/search")
+def search_post(filters: FilterCriteriaIn):
+    sources = filters.source or []
 
+    filter_criteria = FilterCriteria(
+        scopus="scopus" in sources,
+        wos="wos" in sources,
+        openalex="openalex" in sources,
+        # language=filters.language,
+        # author=filters.author,
+        start_year=filters.range.start if filters.range else None,
+        end_year=filters.range.end if filters.range else None,
+        ranking=filters.ranking,
+        rating=filters.rating
+
+    )
+
+    controller = SearchController()
+    return controller.searchPapers(filters.q, filter_criteria)
 
 # 🔹 SearchController class
 class SearchController:

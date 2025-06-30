@@ -143,37 +143,53 @@ function resetYearFilter() {
 // ===================================================
 
 async function performSearch() {
-  const query = document.getElementById("searchInput").value.trim();
+  const payload = {
+  q: document.getElementById("searchInput").value.trim(),
+  range: {
+    start: parseInt(document.getElementById("yearFrom").value),
+    end: parseInt(document.getElementById("yearTo").value)
+  },
+  source: Array.from(document.querySelectorAll(".sourceCheckbox"))
+               .filter(cb => cb.checked)
+               .map(cb => cb.value),
+  ranking: [],  // optional: wenn du es noch nicht brauchst, weglassen oder leer
+  rating: []    // optional ebenso
+  };
+
+  const response = await axios.post("/api/search", payload);
+  const data = response.data;
+
+  // const query = document.getElementById("searchInput").value.trim();
   const sortOption = document.getElementById("sortOption").value;
 
-  const selectedGroups = [
-    ...document.querySelectorAll(".vhbCheckbox"),
-    ...document.querySelectorAll(".abdcCheckbox")
-  ]
-    .filter(cb => cb.checked)
-    .map(cb => cb.value);
+  // const selectedGroups = [
+  //   ...document.querySelectorAll(".vhbCheckbox"),
+  //   ...document.querySelectorAll(".abdcCheckbox")
+  // ]
+  //   .filter(cb => cb.checked)
+  //   .map(cb => cb.value);
 
-  const selectedSources = Array.from(document.querySelectorAll(".sourceCheckbox"))
-    .filter(cb => cb.checked)
-    .map(cb => cb.value);
+  // const selectedSources = Array.from(document.querySelectorAll(".sourceCheckbox"))
+  //   .filter(cb => cb.checked)
+  //   .map(cb => cb.value);
 
-  const yearFrom = document.getElementById("yearFrom").value;
-  const yearTo = document.getElementById("yearTo").value;
+  // const yearFrom = document.getElementById("yearFrom").value;
+  // const yearTo = document.getElementById("yearTo").value;
 
   const container = document.getElementById("resultsContainer");
   container.innerHTML = "<p class='text-gray-600'>Suche läuft...</p>";
 
-  try {
-    const params = new URLSearchParams({
-      q: query,
-      year_from: yearFrom,
-      year_to: yearTo,
-      source: selectedSources.join(","),
-      group: selectedGroups.join(",")
-    });
+  // try {
+  //   const params = new URLSearchParams({
+  //     q: query,
+  //     year_from: yearFrom,
+  //     year_to: yearTo,
+  //     source: selectedSources.join(","),
+  //     group: selectedGroups.join(",")
+  //   });
 
-    const response = await axios.get(`/api/search?${params.toString()}`);
-    const data = response.data;
+  //   const response = await axios.get(`/api/search?${params.toString()}`);
+  //   const data = response.data;
 
     if (data.length === 0) {
       container.innerHTML = "<p class='text-gray-500 text-center'>Keine Ergebnisse gefunden.</p>";
@@ -208,8 +224,8 @@ async function performSearch() {
     publicationData = data;
     renderYearChart(publicationData);
 
-  } catch (err) {
-    console.error("Fehler bei der Suche:", err);
-    container.innerHTML = "<p class='text-red-500'>Fehler bei der Suche. Bitte später erneut versuchen.</p>";
-  }
+  // } catch (err) {
+  //   console.error("Fehler bei der Suche:", err);
+  //   container.innerHTML = "<p class='text-red-500'>Fehler bei der Suche. Bitte später erneut versuchen.</p>";
+  // }
 }

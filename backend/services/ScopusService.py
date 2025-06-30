@@ -1,5 +1,4 @@
-# services/scopus_service.py
-# Scopus-API-Abfrage mit Fehlerbehandlung
+# scopus_service.py – überarbeitet für POST + FilterCriteria
 import os
 from typing import Optional
 from urllib.parse import quote_plus
@@ -11,39 +10,40 @@ from backend.models.PaperDTO import PaperDTO
 
 class ScopusService(PaperRestService):
 
-    def __init__(self, abc_ranking):  # neu Finja
+    def __init__(self, abc_ranking):
         load_dotenv()
         self.api_key = os.getenv('SCOPUS.APIKEY')
         self.base_url = "https://api.elsevier.com/content/search/scopus"
-        self.abc_ranking = abc_ranking  # neu Finja # Fehler Frage: soll hier jz der Ranking score oder die Ranking daten gespeichert werden??
+        self.abc_ranking = abc_ranking  # enthält Ranking-Logik (z. B. VHB, ABDC)
 
     def build_query(self, search_term: str, filters: Optional[FilterCriteria]) -> str:
         query_parts = [f"TITLE({search_term})"]
 
         if filters:
-            if filters.start_date:
-                query_parts.append(f"PUBYEAR > {filters.start_year}")
-            if filters.end_date:
-                query_parts.append(f"PUBYEAR < {filters.end_year}")
-            if filters.author:
-                query_parts.append(f"AUTHNAME({filters.author})")
-            if filters.language:
-                query_parts.append(f"LANGUAGE({filters.language})")
+            if filters.start_year:
+                query_parts.append(f"PUBYEAR > {filters.start_year - 1}")  # simuliert >=
+
+            if filters.end_year:
+                query_parts.append(f"PUBYEAR < {filters.end_year + 1}")    # simuliert <=
 
 
-        return " AND ".join(query_parts)
+            # if filters.author:
+            #     author_queries = [f"AUTHNAME({a})" for a in filters.author]
+            #     query_parts.append(f"({' OR '.join(author_queries)})")
+
+            # if filters.language:
+            #     language_queries = [f"LANGUAGE({l})" for l in filters.language]
+            #     query_parts.append(f"({' OR '.join(language_queries)})")
+
+        query = " AND ".join(query_parts)
+        print(f"[DEBUG] Final Scopus Query: {query}")
+        return query
 
     def query(self, search_term: str, filters: Optional[FilterCriteria]) -> list[PaperDTO]:
         query_string = self.build_query(search_term, filters)
-        print(f"[DEBUG] Query: {query_string}")
-
-        params = {
-            "query": query_string,
-            "count": "25",
-        }
 
         encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=25"
-        print(f"[DEBUG] Manuell zusammengesetzte URL: {encoded_url}")
+        print(f"[DEBUG] Scopus API URL: {encoded_url}")
 
         headers = {
             "X-ELS-APIKey": self.api_key,
@@ -57,19 +57,22 @@ class ScopusService(PaperRestService):
             print(f"[DEBUG] Response Code: {response.status_code}")
             response.raise_for_status()
             data = response.json()
-            print("[DEBUG] Results gefunden:", len(data.get("search-results", {}).get("entry", [])))
 
-            for result in data.get("search-results", {}).get("entry", []):
+            entries = data.get("search-results", {}).get("entry", [])
+            print(f"[DEBUG] Results gefunden: {len(entries)}")
+
+            for result in entries:
                 journal_name = result.get("prism:publicationName", "N/A")
-                abc_ranking = self.abc_ranking.match_ranking(journal_name) # Fehler Frage: vllt passt das von der Funktionalität und den Daten dann doch, aber die VariablenBennenung (so ähnlich trotz unterschiedlicher Typen) ist evtl verwirrend
+                ranking_score = self.abc_ranking.match_ranking(journal_name)  # kann später umgebaut werden
+
                 results.append(PaperDTO(
                     title=result.get("dc:title", "N/A"),
                     authors=result.get("dc:creator", "N/A"),
                     abstract=result.get("dc:description", "N/A"),
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
-                    quality_score=abc_ranking, # hier noch Fehler, welcher Datentyp ist abc_ranking??
-                    journal_name=result.get("prism:publicationName", "N/A"),
+                    quality_score=ranking_score,
+                    journal_name=journal_name,
                     issn=result.get("prism:issn"),
                     eissn=result.get("prism:eIssn"),
                     doi=result.get("prism:doi"),
