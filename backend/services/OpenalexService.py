@@ -6,6 +6,7 @@ from typing import List, Optional
 from backend.models.FilterCriteria import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
+import json
 
 
 class OpenAlexService(PaperRestService):
@@ -39,10 +40,16 @@ class OpenAlexService(PaperRestService):
             response.raise_for_status()
             data = response.json()
 
+            print(json.dumps(data, indent=2))
+
+
             for result in data.get('results', []):
                 doi = result.get('doi')
+                clean_doi = doi.replace("https://doi.org/", "") if doi else None
                 primary_location = result.get('primary_location', {})
                 source = result.get('host_venue', {})
+
+                url = (primary_location.get('url') if isinstance(primary_location, dict) else None) or (f"https://doi.org/{clean_doi}" if clean_doi else None)
 
                 # Reconstruct abstract from inverted index
                 abstract_index = result.get('abstract_inverted_index')
@@ -66,7 +73,7 @@ class OpenAlexService(PaperRestService):
                     issn=source.get('issn_l'),
                     eissn=None,
                     doi=doi,
-                    url = (primary_location.get('url') if primary_location else None) or (f"https://doi.org/{doi}" if doi else None),   
+                    url=url,
                     citations=result.get('cited_by_count', 0)
                 ))
         except requests.exceptions.RequestException as e:
