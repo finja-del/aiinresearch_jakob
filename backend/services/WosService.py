@@ -38,7 +38,8 @@ class WOSService(PaperRestService):
             for hit in hits:
                 title = hit.get('title',{})
                 doi = hit.get('identifiers',{}).get('doi')
-                for author in hit.get('names',{}).get('authors'):
+                authors = hit.get('names', {}).get('authors') or []
+                for author in authors:
                     authors.append(author.get('displayName'))
                 citation = hit.get("citations",[])[0].get('count')
                 journal = hit.get('source',{}).get('sourceTitle')

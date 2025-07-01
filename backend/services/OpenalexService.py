@@ -25,8 +25,8 @@ class OpenAlexService(PaperRestService):
             if filter_criteria.start_year and filter_criteria.end_year:
                 filters.append(f"from_publication_date:{filter_criteria.start_year}-01-01")
                 filters.append(f"to_publication_date:{filter_criteria.end_year}-12-31")
-            if filter_criteria.author:
-                filters.append(f"author.display_name.search:{filter_criteria.author}")
+            # if filter_criteria.author:
+            #     filters.append(f"author.display_name.search:{filter_criteria.author}")
             # Sprache ist optional und nicht direkt unterstützt → OpenAlex indexiert meist nur englisch explizit
 
             if filters:
@@ -54,8 +54,10 @@ class OpenAlexService(PaperRestService):
 
                 results.append(PaperDTO(
                     title=result.get('title', 'N/A'),
-                    authors=', '.join(
-                        a.get('author', {}).get('display_name', 'N/A') for a in result.get('authorships', [])),
+                    authors = [
+                        a.get('author', {}).get('display_name', 'N/A')
+                        for a in result.get('authorships', [])
+                    ] if result.get('authorships') else [], 
                     abstract=abstract,
                     date=result.get('publication_date', '1900-01-01'),
                     source='OpenAlex',
@@ -73,4 +75,4 @@ class OpenAlexService(PaperRestService):
         return results
 
     def getPaperList(self, searchTerm: str, filters: FilterCriteria) -> list[PaperDTO]:
-        return self.query(searchTerm)
+        return self.query(searchTerm, filters)
