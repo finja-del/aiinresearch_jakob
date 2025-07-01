@@ -44,7 +44,7 @@ def search_route(
 # 🔹 API route for POST requests
 @router.post("/search")
 def search_post(filters: FilterCriteriaIn):
-    sources = filters.source or []
+    sources = [s.lower() for s in filters.source or []]
 
     filter_criteria = FilterCriteria(
         scopus="scopus" in sources,
