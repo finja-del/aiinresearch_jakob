@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from backend.models.FilterCriteria import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
+import json
 
 class ScopusService(PaperRestService):
 
@@ -40,6 +41,8 @@ class ScopusService(PaperRestService):
         return query
 
     def query(self, search_term: str, filters: Optional[FilterCriteria]) -> list[PaperDTO]:
+        print("[DEBUG] ScopusService.query() wurde aufgerufen")
+
         query_string = self.build_query(search_term, filters)
 
         encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=25"
@@ -57,6 +60,7 @@ class ScopusService(PaperRestService):
             print(f"[DEBUG] Response Code: {response.status_code}")
             response.raise_for_status()
             data = response.json()
+            print(json.dumps(data, indent=2))  # Debug-Ausgabe der gesamten Antwort
 
             entries = data.get("search-results", {}).get("entry", [])
             print(f"[DEBUG] Results gefunden: {len(entries)}")
@@ -67,7 +71,7 @@ class ScopusService(PaperRestService):
 
                 results.append(PaperDTO(
                     title=result.get("dc:title", "N/A"),
-                    authors=result.get("dc:creator", "N/A"),
+                    authors=[result.get("dc:creator")] if result.get("dc:creator") else [],
                     abstract=result.get("dc:description", "N/A"),
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
