@@ -39,12 +39,12 @@ function selectAllRatings() {
   document.querySelectorAll(".rankingSourceCheckbox, .ratingCheckbox").forEach(cb => cb.checked = true);
 }
 
-  return lines.slice(1).map(line => {
-    const values = line.split(',').map(v => v.trim());
-    const entry = {};
-    headers.forEach((h, i) => entry[h] = values[i]);
-    return entry;
-  });
+  // return lines.slice(1).map(line => {
+  //   const values = line.split(',').map(v => v.trim());
+  //   const entry = {};
+  //   headers.forEach((h, i) => entry[h] = values[i]);
+  //   return entry;
+  // });
 
 
 // ===================================================
