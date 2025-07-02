@@ -175,20 +175,104 @@ async function performSearch() {
 
     // Render
     container.innerHTML = "";
-    data.forEach(result => {
-      container.innerHTML += `
-        <div class="bg-white border border-gray-200 p-4 rounded-lg shadow-sm">
-          <h2 class="text-xl font-semibold text-blue-800">${result.title}</h2>
-          <p class="text-sm text-gray-700">
-            Autoren: ${Array.isArray(result.authors) ? result.authors.join(", ") : result.authors || "unbekannt"}
-            Jahr: ${result.date?.split("-")[0] || "—"} |
-            VHB: ${result.journal_quartile || "N/A"} |
-            Quelle: ${result.source || "—"}
+    data.forEach((result, index) => {
+    const extraId = `extra-info-${index}`; // Eindeutige ID für jedes Ergebnis
+
+    container.innerHTML += `
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-6">
+      <div class="flex justify-between items-start">
+
+        <!-- Titel und Autoren -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">${result.title}</h2>
+          <p class="text-sm text-gray-500 mt-1">
+            ${result.date?.split("-")[0] || "—"} | 
+            ${Array.isArray(result.authors) ? result.authors.join(", ") : result.authors || "unbekannt"}
           </p>
-          <p class="text-sm mt-2">${result.abstract || "Kein Abstract vorhanden."}</p>
         </div>
-      `;
-    });
+
+        <!-- Relevanz und Qualität -->
+        <div>
+          <span class="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+            ${result.relevance_label || "high relevance"}
+          </span>
+          <span class="ml-2 inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+            ${result.quality_quartile || "Q1"}
+          </span>
+        </div>
+      </div>
+
+      <!-- Abstract -->
+      <p class="text-sm text-gray-700 mt-4 mb-4 line-clamp-3">
+        ${(result.abstract && result.abstract !== "N/A") 
+        ? result.abstract 
+        : '<em>No abstract available.</em>'}
+      </p>
+
+      <!-- Citations und Journalname -->
+      <div class="text-sm text-gray-600 space-y-1 mb-4">
+          <p>
+            <strong>📖</strong> ${result.citations ?? "N/A"} | 
+              ${(result.journal_name && result.journal_name !== "N/A") ? result.journal_name : '<em>Unknown journal name</em>'}
+            <strong>found on</strong> ${result.source || "<em>Unknown source</em>"}
+          </p>
+      </div>
+
+      <!-- VHB, ABDC und Ranking -->
+      <div class="flex flex-wrap gap-2 mt-2 mb-4">
+        <span class="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+          VHB: ${result.journal_quartile || "N/A"}
+        </span>
+        <span class="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+          ABDC: ${result.journal_quartile || "N/A"}
+        </span>
+        <span class="inline-block px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+          Ranking: ${result.ranking ?? "N/A"}
+        </span>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-4">
+        ${(result.tags || []).map(tag => `
+          <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">${tag}</span>
+        `).join("")}
+      </div>
+
+      <!-- Zusätzliche Informationen (anfangs versteckt) -->
+      <div id="${extraId}" class="hidden text-sm text-gray-700 mb-4">
+        <p>
+          <strong>URL:</strong> ${result.url ? `<a href="${result.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">${result.url}</a>` : "N/A"}<br> 
+          <strong>ISSN:</strong> ${result.issn || "N/A"}<br>
+          <strong>eISSN:</strong> ${result.eISSN || "N/A"}<br>
+          <strong>DOI:</strong> ${result.doi ? `<a href="${result.doi}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">${result.doi}</a>` : "N/A"}<br>
+          <strong>Date:</strong> ${result.date || "N/A"}
+        </p>
+      </div>
+
+      <!-- Button-Leiste -->
+      <div class="flex justify-between items-center pt-2 border-t border-gray-200 mt-2">
+        <div class="flex gap-2">
+          <button class="text-sm text-gray-600 hover:text-blue-600">💾 Save</button>
+          <button class="text-sm text-gray-600 hover:text-blue-600">▶️ Export</button>
+          <button class="text-sm text-gray-600 hover:text-blue-600">🏷️ Tag</button>
+          <button 
+            onclick="document.getElementById('${extraId}').classList.toggle('hidden')" 
+            class="text-sm text-gray-600 hover:text-blue-600"
+          >
+            🔍 More Information
+          </button>
+        </div>
+        <button 
+          class="text-sm text-blue-600 hover:underline" 
+          onclick="window.open('${result.url}', '_blank')" 
+          ${!result.url ? 'disabled title="Kein Link verfügbar"' : ''}
+        >
+          🔗 View
+        </button>
+      </div>
+    </div>
+  `;
+});
+
 
     // Optional: Save for chart rendering
     publicationData = data;
