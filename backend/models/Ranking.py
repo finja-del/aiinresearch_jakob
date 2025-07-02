@@ -1,4 +1,4 @@
-#neu Finja
+#new Finja
 import csv
 
 class Ranking:
@@ -10,7 +10,7 @@ class Ranking:
         with open(filepath, newline='', encoding='latin1') as csvfile:
             lines = csvfile.readlines()
 
-        # 1. Finde die Zeile mit den echten Spaltenüberschriften
+        # 1. Find the row with the real column headings
         header_index = None
         for i, line in enumerate(lines):
             if "Journal Title" in line and "2022 rating" in line:
@@ -18,16 +18,16 @@ class Ranking:
                 break
 
         if header_index is None:
-            raise ValueError("Keine gültige Header-Zeile gefunden mit 'Journal Title' und '2022 rating'")
+            raise ValueError("No valid header line found with 'Journal Title' and '2022 rating'")
 
-        # 2. Verwende nur die Daten ab dieser Zeile
+        # 2. Use only the data from this line onwards
         data_lines = lines[header_index:]
         reader = csv.DictReader(data_lines, delimiter=';')
 
         for row in reader:
             journal = row['Journal Title'].strip().lower()
             rating = row['2022 rating'].strip()
-            if journal:  # nur gültige Zeilen
+            if journal:  #only valid names
                 ranking[journal] = rating
 
         return ranking
