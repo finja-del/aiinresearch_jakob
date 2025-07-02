@@ -1,11 +1,30 @@
 console.log("📦 script.js loaded");
+// ===================================================
+// 📦 Initialisierung & Globale Variablen
+// ===================================================
 
-let publicationData = [];
-let yearChart;
-let selectedYear = "";
-let yearRange = { from: "", to: "" };
+console.log("📦 script.js loaded"); // Zum Testen, ob eingebunden
+
+let publicationData = []; // Speichert alle geladenen Paper
+let yearChart;            // Chart.js-Instanz
+let selectedYear = "";    // Geklicktes Jahr im Chart
+let yearRange = { from: "", to: "" }; // Jahrfilterzustand
+
+init(); // Initialer Aufruf beim Laden
+
+// ===================================================
+// 🚀 Initialisierung & CSV-Helferfunktionen
+// ===================================================
 
 async function init() {
+  const response = await axios.get("/api/search?q=");
+  publicationData = response.data;
+  renderYearChart(publicationData);
+  performSearch(); // gleich anzeigen
+}
+
+// 🔄 CSV-Datei laden und parsen (optional, z. B. für Testzwecke)
+async function loadCSVData() {
   try {
     const response = await axios.get("/api/search?q=");
     publicationData = response.data;
@@ -20,19 +39,86 @@ function selectAllRatings() {
   document.querySelectorAll(".rankingSourceCheckbox, .ratingCheckbox").forEach(cb => cb.checked = true);
 }
 
-function deselectAllRatings() {
-  document.querySelectorAll(".rankingSourceCheckbox, .ratingCheckbox").forEach(cb => cb.checked = false);
-}
+  return lines.slice(1).map(line => {
+    const values = line.split(',').map(v => v.trim());
+    const entry = {};
+    headers.forEach((h, i) => entry[h] = values[i]);
+    return entry;
+  });
 
+
+// ===================================================
+// 📈 Jahr-Chart: Darstellung & Interaktivität
+// ===================================================
 
 function renderYearChart(data) {
   const yearCounts = {};
+
   data.forEach(item => {
-    const year = item.date?.split("-")[0];
-    if (year) {
-      yearCounts[year] = (yearCounts[year] || 0) + 1;
+    const year = item.Date?.split("-")[0]; // Achtung: Schlüssel muss ggf. "date" heißen
+    if (year) yearCounts[year] = (yearCounts[year] || 0) + 1;
+  });
+
+  const allYears = Object.keys(yearCounts).map(Number).sort((a, b) => a - b);
+  const minYear = allYears.length > 0 ? Math.min(...allYears) : 1950;
+  const maxYear = 2025;
+
+  const yearFromInput = document.getElementById("yearFrom");
+  const yearToInput = document.getElementById("yearTo");
+
+  if (!yearFromInput.value) yearFromInput.value = minYear;
+  if (!yearToInput.value) yearToInput.value = maxYear;
+
+  const from = parseInt(yearFromInput.value);
+  const to = parseInt(yearToInput.value);
+
+  const rangeYears = [];
+  for (let y = from; y <= to; y++) {
+    rangeYears.push(String(y));
+    if (!yearCounts[y]) yearCounts[y] = 0;
+  }
+
+  const counts = rangeYears.map(y => yearCounts[y]);
+
+  const ctx = document.getElementById("yearChart").getContext("2d");
+  if (yearChart) yearChart.destroy();
+
+  yearChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: rangeYears,
+      datasets: [{
+        label: "Paper pro Jahr",
+        data: counts,
+        fill: false,
+        borderColor: "#2563eb",
+        backgroundColor: "#60a5fa",
+        tension: 0.3,
+        pointBackgroundColor: rangeYears.map(y => y === selectedYear ? "#1d4ed8" : "#60a5fa"),
+        pointRadius: 5
+      }]
+    },
+    options: {
+      onClick: (evt, elements) => {
+        if (elements.length > 0) {
+          const clickedYear = yearChart.data.labels[elements[0].index];
+          selectedYear = selectedYear === clickedYear ? "" : clickedYear;
+          renderYearChart(publicationData); // Visuelles Update
+          performSearch();                  // Filter anwenden
+        }
+      },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: "Jahr" } },
+        y: { beginAtZero: true, title: { display: true, text: "Paper" } }
+      }
     }
   });
+}
+
+// ===================================================
+// 🔁 Jahr-Filtersteuerung (Buttons anzeigen/zurücksetzen)
+// ===================================================
 
   const allYears = Object.keys(yearCounts).map(Number).sort((a, b) => a - b);
   const minYear = allYears.length > 0 ? Math.min(...allYears) : 2000;
@@ -92,10 +178,30 @@ function renderYearChart(data) {
       }
     }
   });
-}
+
+
+// ===================================================
+// 🔍 Hauptsuche: Filter sammeln, API aufrufen, anzeigen
+// ===================================================
 
 async function performSearch() {
-  const query = document.getElementById("searchInput").value.trim();
+  const payload = {
+  q: document.getElementById("searchInput").value.trim(),
+  range: {
+    start: parseInt(document.getElementById("yearFrom").value),
+    end: parseInt(document.getElementById("yearTo").value)
+  },
+  source: Array.from(document.querySelectorAll(".sourceCheckbox"))
+               .filter(cb => cb.checked)
+               .map(cb => cb.value),
+  ranking: [],  // optional: wenn du es noch nicht brauchst, weglassen oder leer
+  rating: []    // optional ebenso
+  };
+
+  const response = await axios.post("/api/search", payload);
+  const data = response.data;
+
+  // const query = document.getElementById("searchInput").value.trim();
   const sortOption = document.getElementById("sortOption").value;
 
   const selectedSources = Array.from(document.querySelectorAll(".sourceCheckbox"))
@@ -110,8 +216,8 @@ async function performSearch() {
     .filter(cb => cb.checked)
     .map(cb => cb.value);
 
-  const yearFrom = document.getElementById("yearFrom").value;
-  const yearTo = document.getElementById("yearTo").value;
+  // const yearFrom = document.getElementById("yearFrom").value;
+  // const yearTo = document.getElementById("yearTo").value;
 
   const container = document.getElementById("resultsContainer");
   container.innerHTML = "<p class='text-gray-600'>Loading...</p>";
@@ -126,8 +232,8 @@ async function performSearch() {
       rating: selectedRatings.join(",")
     });
 
-    const response = await axios.get(`/api/search?${params.toString()}`);
-    const data = response.data;
+  //   const response = await axios.get(`/api/search?${params.toString()}`);
+  //   const data = response.data;
 
     if (!Array.isArray(data) || data.length === 0) {
       container.innerHTML = "<p class='text-gray-500 text-center'>No results found.</p>";

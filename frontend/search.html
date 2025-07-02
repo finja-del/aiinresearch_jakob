@@ -3,17 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <title>Web of Research</title>
+
+  <!-- 🌐 Frameworks und Bibliotheken -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
+
 <body class="bg-gray-100 font-sans">
+  <!-- ===========================
+       🔷 HEADER
+       =========================== -->
   <header class="bg-gray-800 text-white px-6 py-4">
     <h1 class="text-xl font-bold">Web of Research</h1>
   </header>
 
   <div class="flex min-h-[calc(100vh-64px)]">
-    <!-- Sidebar -->
+    <!-- ===========================
+         🧭 SIDEBAR – Filterbereich
+         =========================== -->
     <aside class="w-64 bg-white shadow p-6">
       <h2 class="font-semibold text-lg mb-4">Filters</h2>
 
@@ -61,18 +69,23 @@
         </div>
       </div>
 
+      <!-- Apply Filters -->
       <button onclick="performSearch()" class="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Apply Filters</button>
     </aside>
 
-    <!-- Main Section -->
+    <!-- ===========================
+         📄 MAIN – Suchfeld & Ergebnisse
+         =========================== -->
     <main class="flex-grow flex flex-col items-center justify-start p-8 relative">
+      <!-- 🔍 Suchfeld & Sortierung -->
       <div class="w-full max-w-2xl mb-6">
+        <!-- Suchleiste -->
         <div class="flex">
           <input id="searchInput" type="text" placeholder="Enter search term..." class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-500" />
           <button onclick="performSearch()" class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700">Search</button>
         </div>
 
-        <!-- Sorting -->
+        <!-- 🔃 Sortierung -->
         <div class="mt-4">
           <label for="sortOption" class="block mb-1 text-sm font-medium">Sort by</label>
           <select id="sortOption" class="w-full p-2 border rounded">
@@ -83,11 +96,14 @@
         </div>
       </div>
 
-      <!-- Results -->
+      <!-- 📋 Ergebniscontainer -->
       <div id="resultsContainer" class="w-full max-w-3xl space-y-4"></div>
     </main>
   </div>
 
+  <!-- ===========================
+       🧠 SCRIPTS
+       =========================== -->
   <script>
     function selectAllRatings() {
       document.querySelectorAll(".rankingSourceCheckbox, .ratingCheckbox").forEach(cb => cb.checked = true);

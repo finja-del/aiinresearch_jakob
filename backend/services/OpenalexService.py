@@ -6,6 +6,7 @@ from typing import List, Optional
 from backend.models.FilterCriteria import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
+import json
 
 
 class OpenAlexService(PaperRestService):
@@ -25,8 +26,8 @@ class OpenAlexService(PaperRestService):
             if filter_criteria.start_year and filter_criteria.end_year:
                 filters.append(f"from_publication_date:{filter_criteria.start_year}-01-01")
                 filters.append(f"to_publication_date:{filter_criteria.end_year}-12-31")
-            if filter_criteria.author:
-                filters.append(f"author.display_name.search:{filter_criteria.author}")
+            # if filter_criteria.author:
+            #     filters.append(f"author.display_name.search:{filter_criteria.author}")
             # Sprache ist optional und nicht direkt unterstützt → OpenAlex indexiert meist nur englisch explizit
 
             if filters:
@@ -39,10 +40,16 @@ class OpenAlexService(PaperRestService):
             response.raise_for_status()
             data = response.json()
 
+            print(json.dumps(data, indent=2))
+
+
             for result in data.get('results', []):
                 doi = result.get('doi')
+                clean_doi = doi.replace("https://doi.org/", "") if doi else None
                 primary_location = result.get('primary_location', {})
                 source = result.get('host_venue', {})
+
+                url = (primary_location.get('url') if isinstance(primary_location, dict) else None) or (f"https://doi.org/{clean_doi}" if clean_doi else None)
 
                 # Reconstruct abstract from inverted index
                 abstract_index = result.get('abstract_inverted_index')
@@ -54,8 +61,10 @@ class OpenAlexService(PaperRestService):
 
                 results.append(PaperDTO(
                     title=result.get('title', 'N/A'),
-                    authors=', '.join(
-                        a.get('author', {}).get('display_name', 'N/A') for a in result.get('authorships', [])),
+                    authors = [
+                        a.get('author', {}).get('display_name', 'N/A')
+                        for a in result.get('authorships', [])
+                    ] if result.get('authorships') else [], 
                     abstract=abstract,
                     date=result.get('publication_date', '1900-01-01'),
                     source='OpenAlex',
@@ -64,7 +73,7 @@ class OpenAlexService(PaperRestService):
                     issn=source.get('issn_l'),
                     eissn=None,
                     doi=doi,
-                    url = (primary_location.get('url') if primary_location else None) or (f"https://doi.org/{doi}" if doi else None),   
+                    url=url,
                     citations=result.get('cited_by_count', 0)
                 ))
         except requests.exceptions.RequestException as e:
@@ -73,4 +82,4 @@ class OpenAlexService(PaperRestService):
         return results
 
     def getPaperList(self, searchTerm: str, filters: FilterCriteria) -> list[PaperDTO]:
-        return self.query(searchTerm)
+        return self.query(searchTerm, filters)

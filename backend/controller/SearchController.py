@@ -1,43 +1,66 @@
+from fastapi import APIRouter, Query
+from typing import Optional, List
 from backend.services.ScopusService import ScopusService
 from backend.services.OpenalexService import OpenAlexService
 from backend.services.WosService import WOSService
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 from backend.models.Ranking import Ranking
-from backend.models.FilterCriteria import FilterCriteria
+from backend.models.FilterCriteria import FilterCriteria, FilterCriteriaIn
 import os
-from flask import Blueprint, request, jsonify
 
-# 🔹 Define the blueprint
-search_blueprint = Blueprint("search_api", __name__)
 
-# 🔹 Parse filters from frontend string to backend object
-def parse_filter_criteria(args) -> FilterCriteria:
-    sources = [s.strip().lower() for s in args.get("source", "").split(",")]
+# 🔹 Define the router
+router = APIRouter()
 
-    return FilterCriteria(
+# 🔹 API route outside the class
+@router.get("/search")
+def search_route(
+    q: str = Query(..., alias="q"),
+    source: Optional[str] = Query(None),
+    # language: Optional[str] = None,
+    # author: Optional[str] = None,
+    year_from: Optional[int] = Query(None, alias="year_from"),
+    year_to: Optional[int] = Query(None, alias="year_to")
+):
+    if not q.strip():
+        return []
+
+    sources = [s.strip().lower() for s in (source or "").split(",")]
+    filters = FilterCriteria(
         scopus="scopus" in sources,
         wos="web of science" in sources,
         openalex="openalex" in sources,
-        language=args.get("language"),
-        author=args.get("author"),
-        start_year=int(args.get("year_from")) if args.get("year_from") else None,
-        end_year=int(args.get("year_to")) if args.get("year_to") else None
+        # language=language,
+        # author=author,
+        start_year=year_from,
+        end_year=year_to
     )
 
-
-# 🔹 API route outside the class
-@search_blueprint.route("/api/search", methods=["GET"])
-def search_route():
-    query = request.args.get("q", "").strip()
-    if not query:
-        return jsonify([])
-
-    filters = parse_filter_criteria(request.args)
     controller = SearchController()
-    results = controller.searchPapers(query, filters)
-    return jsonify(results)
+    results = controller.searchPapers(q, filters)
+    return results
 
+# 🔹 API route for POST requests
+@router.post("/search")
+def search_post(filters: FilterCriteriaIn):
+    sources = [s.lower() for s in filters.source or []]
+
+    filter_criteria = FilterCriteria(
+        scopus="scopus" in sources,
+        wos="wos" in sources,
+        openalex="openalex" in sources,
+        # language=filters.language,
+        # author=filters.author,
+        start_year=filters.range.start if filters.range else None,
+        end_year=filters.range.end if filters.range else None,
+        ranking=filters.ranking,
+        rating=filters.rating
+
+    )
+
+    controller = SearchController()
+    return controller.searchPapers(filters.q, filter_criteria)
 
 # 🔹 SearchController class
 class SearchController:
