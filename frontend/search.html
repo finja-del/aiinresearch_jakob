@@ -28,23 +28,23 @@
       <h2 class="font-semibold text-lg mb-4">Filter</h2>
 
       <!-- 📅 Jahr-Chart -->
-      <p class="block mb-2 text-sm font-medium">Jahr (per Klick auswählbar)</p>
+      <p class="block mb-2 text-sm font-medium">Year (selectable by click)</p>
       <canvas id="yearChart" height="200" class="mb-2"></canvas>
 
       <!-- 📆 Jahr-Felder -->
-      <div class="grid grid-cols-4 gap-1 mb-1">
-        <label class="col-span-1 text-sm flex items-center">Von</label>
-        <input id="yearFrom" type="number" class="col-span-1 p-1 border rounded text-sm w-full" />
-        <label class="col-span-1 text-sm flex items-center">Bis</label>
-        <input id="yearTo" type="number" class="col-span-1 p-1 border rounded text-sm w-full" />
+      <div class="grid grid-cols-6 gap-1 mb-2">
+        <label class="col-span-1 text-sm flex items-center">From</label>
+        <input id="yearFrom" type="number" class="col-span-2 p-1 border rounded text-sm w-full" />
+        <label class="col-span-1 text-sm flex items-center">Until</label>
+        <input id="yearTo" type="number" class="col-span-2 p-1 border rounded text-sm w-full" />
       </div>
 
       <!-- 📤 Jahr-Anwenden/Zurücksetzen -->
       <button onclick="updateYearRange()" class="w-full mb-2 text-sm bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600">
-        Anzeigen
+        Update Year Filter
       </button>
       <button onclick="resetYearFilter()" class="w-full mb-6 text-sm bg-gray-300 text-gray-800 px-3 py-2 rounded hover:bg-gray-400">
-        Zurücksetzen
+        Reset Year Filter
       </button>
 
       <!-- 🏷️ VHB-Ranking -->
@@ -63,15 +63,20 @@
       </div>
 
       <!-- 🧪 Quellenfilter -->
-      <p class="block mb-2 text-sm font-medium">Quellen</p>
+      <p class="block mb-2 text-sm font-medium">Database</p>
       <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex</label>
       <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="wos" checked /> Web of Science</label>
       <label class="block mb-4"><input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus</label>
 
-      <!-- 🔍 Suche auslösen -->
-      <button onclick="performSearch()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-        Anwenden
-      </button>
+      <!-- 🔃 Sortierung -->
+        <div class="mt-4">
+          <label for="sortOption" class="block mb-1 text-sm font-medium">Display Filters</label>
+          <select id="sortOption" class="w-full p-2 border rounded">
+            <option value="">No Filters</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
     </aside>
 
     <!-- ===========================
@@ -87,26 +92,17 @@
           <input
             id="searchInput"
             type="text"
-            placeholder="Suchbegriff eingeben..."
+            placeholder="Search Database.."
             class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-500"
           />
           <button
             onclick="performSearch()"
             class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700"
           >
-            Suchen
+            Search
           </button>
         </div>
 
-        <!-- 🔃 Sortierung -->
-        <div class="mt-4">
-          <label for="sortOption" class="block mb-1 text-sm font-medium">Sortierung</label>
-          <select id="sortOption" class="w-full p-2 border rounded">
-            <option value="">Keine Sortierung</option>
-            <option value="newest">Neueste zuerst</option>
-            <option value="oldest">Älteste zuerst</option>
-          </select>
-        </div>
       </div>
 
       <!-- 📋 Ergebniscontainer -->
