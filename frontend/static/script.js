@@ -252,7 +252,6 @@ async function performSearch() {
       <div class="flex justify-between items-center pt-2 border-t border-gray-200 mt-2">
         <div class="flex gap-2">
           <button class="text-sm text-gray-600 hover:text-blue-600">💾 Save</button>
-          <button class="text-sm text-gray-600 hover:text-blue-600">▶️ Export</button>
           <button class="text-sm text-gray-600 hover:text-blue-600">🏷️ Tag</button>
           <button 
             onclick="document.getElementById('${extraId}').classList.toggle('hidden')" 
