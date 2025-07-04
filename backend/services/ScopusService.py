@@ -9,13 +9,14 @@ from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 import json
 
+
 class ScopusService(PaperRestService):
 
-    def __init__(self, abc_ranking):
+    def __init__(self, vhbRanking):
         load_dotenv()
         self.api_key = os.getenv('SCOPUS.APIKEY')
         self.base_url = "https://api.elsevier.com/content/search/scopus"
-        self.abc_ranking = abc_ranking  # enthält Ranking-Logik (z. B. VHB, ABDC)
+        self.vhbRanking = vhbRanking
 
     def build_query(self, search_term: str, filters: Optional[FilterCriteria]) -> str:
         query_parts = [f"TITLE({search_term})"]
@@ -26,7 +27,6 @@ class ScopusService(PaperRestService):
 
             if filters.end_year:
                 query_parts.append(f"PUBYEAR < {filters.end_year + 1}")    # simuliert <=
-
 
             # if filters.author:
             #     author_queries = [f"AUTHNAME({a})" for a in filters.author]
@@ -60,29 +60,35 @@ class ScopusService(PaperRestService):
             print(f"[DEBUG] Response Code: {response.status_code}")
             response.raise_for_status()
             data = response.json()
-            print(json.dumps(data, indent=2))  # Debug-Ausgabe der gesamten Antwort
+            #print(json.dumps(data, indent=2))  # Debug-Ausgabe der gesamten Antwort
 
             entries = data.get("search-results", {}).get("entry", [])
             print(f"[DEBUG] Results gefunden: {len(entries)}")
 
             for result in entries:
                 journal_name = result.get("prism:publicationName", "N/A")
-                ranking_score = self.abc_ranking.match_ranking(journal_name)  # kann später umgebaut werden
+                issn = result.get("prism:issn", "N/A")
+                vhbScore = self.vhbRanking.getRanking(journal_name, issn)  # kann später umgebaut werden
 
-                results.append(PaperDTO(
+                paper = PaperDTO(
                     title=result.get("dc:title", "N/A"),
                     authors=[result.get("dc:creator")] if result.get("dc:creator") else [],
                     abstract=result.get("dc:description", "N/A"),
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
-                    quality_score=ranking_score,
+                    vhbRanking=vhbScore,
                     journal_name=journal_name,
                     issn=result.get("prism:issn"),
                     eissn=result.get("prism:eIssn"),
                     doi=result.get("prism:doi"),
                     url=result.get("prism:url"),
                     citations=int(result.get("citedby-count", 0))
-                ))
+                )
+
+                print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | VHB-Ranking: {vhbScore}")
+
+                results.append(paper)
+
         except requests.exceptions.RequestException as e:
             print(f"[Scopus API Fehler]: {e}")
 

@@ -10,9 +10,9 @@ import json
 
 
 class OpenAlexService(PaperRestService):
-    def __init__(self, ranking): #neu Finja
+    def __init__(self, vhbRanking): #neu Finja
         self.base_url = "https://api.openalex.org/works"
-        self.ranking = ranking #neu Finja
+        self.vhbRanking = vhbRanking #neu Finja
 
     def query(self, search_term: str, filter_criteria: Optional[FilterCriteria] = None) -> List[PaperDTO]:
         params = {
@@ -40,7 +40,7 @@ class OpenAlexService(PaperRestService):
             response.raise_for_status()
             data = response.json()
 
-            print(json.dumps(data, indent=2))
+            # print(json.dumps(data, indent=2))
 
 
             for result in data.get('results', []):
@@ -59,7 +59,7 @@ class OpenAlexService(PaperRestService):
                 else:
                     abstract = 'N/A'
 
-                results.append(PaperDTO(
+                paper = PaperDTO(
                     title=result.get('title', 'N/A'),
                     authors = [
                         a.get('author', {}).get('display_name', 'N/A')
@@ -68,14 +68,18 @@ class OpenAlexService(PaperRestService):
                     abstract=abstract,
                     date=result.get('publication_date', '1900-01-01'),
                     source='OpenAlex',
-                    quality_score=0.0,
+                    vhbRanking= self.vhbRanking.getRanking(source.get('issn_l',source.get('display_name'))),
                     journal_name=source.get('display_name'),
                     issn=source.get('issn_l'),
                     eissn=None,
                     doi=doi,
                     url=url,
                     citations=result.get('cited_by_count', 0)
-                ))
+                )
+
+                print(f"[DEBUG] Paper: {paper.title} | Journal: {paper.journal_name} | ISSN: {paper.issn} | VHB-Ranking: {paper.vhbRanking}")
+                results.append(paper)
+
         except requests.exceptions.RequestException as e:
             print(f"[OpenAlex API Fehler]: {e}")
 
