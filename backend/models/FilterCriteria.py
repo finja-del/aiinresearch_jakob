@@ -1,10 +1,13 @@
 from datetime import date
+from dataclasses import dataclass
 from typing import Optional, List
 from pydantic import BaseModel
 
 
 # 🔹 Intern genutzte Klasse (Logik, nicht direkt API-Eingabe)
+@dataclass
 class FilterCriteria:
+
     def __init__(
         self,
         scopus: bool = True,
@@ -15,6 +18,7 @@ class FilterCriteria:
         end_year: Optional[int] = None,
         ranking: Optional[List[str]] = None,
         rating: Optional[List[str]] = None,
+        author: Optional[List[str]] = None,
         #author: Optional[List[str]] = None
     ):
         self.scopus = scopus
@@ -25,6 +29,7 @@ class FilterCriteria:
         self.end_year = end_year
         self.ranking = ranking or []
         self.rating = rating or []
+        self.author = author or []
         #self.author = author or []
 
     @property
