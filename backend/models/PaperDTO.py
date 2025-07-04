@@ -18,7 +18,7 @@ class PaperDTO:
         self.journal_quartile = journal_quartile
 
 
-    # API expects lowercase keys
+    # API expects lowercase keys test
     # This method is used to convert the object to a dictionary format suitable for API responses
     def to_api_dict(self):
         return {
