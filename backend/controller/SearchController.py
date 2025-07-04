@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Query
-from typing import Optional, List
+from typing import Optional
 from backend.services.ScopusService import ScopusService
 from backend.services.OpenalexService import OpenAlexService
+from backend.services.VhbService import VhbService
 from backend.services.WosService import WOSService
-from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
-from backend.models.Ranking import Ranking
 from backend.models.FilterCriteria import FilterCriteria, FilterCriteriaIn
 import os
 
@@ -44,20 +43,8 @@ def search_route(
 # 🔹 API route for POST requests
 @router.post("/search")
 def search_post(filters: FilterCriteriaIn):
-    sources = [s.lower() for s in filters.source or []]
 
-    filter_criteria = FilterCriteria(
-        scopus="scopus" in sources,
-        wos="wos" in sources,
-        openalex="openalex" in sources,
-        # language=filters.language,
-        # author=filters.author,
-        start_year=filters.range.start if filters.range else None,
-        end_year=filters.range.end if filters.range else None,
-        ranking=filters.ranking,
-        rating=filters.rating
-
-    )
+    filter_criteria = SearchController.to_filter_criteria(filters)
 
     controller = SearchController()
     return controller.searchPapers(filters.q, filter_criteria)
@@ -66,14 +53,14 @@ def search_post(filters: FilterCriteriaIn):
 class SearchController:
 
     def __init__(self):
-        base_path = os.path.dirname(__file__)  # ← liegt in controller/
-        csv_path = os.path.join(base_path, '..', 'data', 'abc_ranking.csv')
-        self.abc_ranking = Ranking(csv_path) #neu Finja
+
+        # VHB-Ranking initialisieren
+        self.vhbRanking = VhbService()
 
         # API-Clients initialisieren
-        self.scopus = ScopusService(self.abc_ranking)
-        self.openalex = OpenAlexService(self.abc_ranking)
-        self.wos = WOSService(self.abc_ranking)
+        self.scopus = ScopusService(self.vhbRanking)
+        self.openalex = OpenAlexService(self.vhbRanking)
+        self.wos = WOSService(self.vhbRanking)
 
     def checkServices(self, filters):
         self.apiClients = []
@@ -95,3 +82,16 @@ class SearchController:
             all_results += results
 
         return [paper.to_api_dict() for paper in all_results]
+
+    @staticmethod
+    def to_filter_criteria(inp: FilterCriteriaIn) -> FilterCriteria:
+        sources = [s.lower() for s in (inp.source or [])]
+        return FilterCriteria(
+            scopus="scopus" in sources,
+            wos="wos" in sources,
+            openalex="openalex" in sources,
+            start_year=inp.range.start if inp.range else None,
+            end_year=inp.range.end if inp.range else None,
+            ranking=inp.ranking,
+            rating=inp.rating
+        )
