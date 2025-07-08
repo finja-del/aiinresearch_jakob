@@ -1,40 +1,35 @@
-#neu Finja
-import csv
+#new Finja
+import json
 
 class Ranking:
     def __init__(self, filepath):
         self.ranking_data = self._load_ranking(filepath)
+        self.name_to_rating = self.ranking_data.get("name_to_rating", {})
+        self.issn_to_rating = self.ranking_data.get("issn_to_rating", {})
 
     def _load_ranking(self, filepath):
-        ranking = {}
-        with open(filepath, newline='', encoding='latin1') as csvfile:
-            lines = csvfile.readlines()
+        with open(filepath, 'r') as f:
+            return json.load(f)
 
-        # 1. Finde die Zeile mit den echten Spaltenüberschriften
-        header_index = None
-        for i, line in enumerate(lines):
-            if "Journal Title" in line and "2022 rating" in line:
-                header_index = i
-                break
+    def match_ranking(self, journal):
+        if not isinstance(journal, str) or not journal:
+            raise TypeError("Expected a non-empty string for journal or ISSN")
 
-        if header_index is None:
-            raise ValueError("Keine gültige Header-Zeile gefunden mit 'Journal Title' und '2022 rating'")
+        first_char = journal[0]
+        ascii_code = ord(first_char)
 
-        # 2. Verwende nur die Daten ab dieser Zeile
-        data_lines = lines[header_index:]
-        reader = csv.DictReader(data_lines, delimiter=';')
+        if 48 <= ascii_code <= 57: # for numbers ie ISSN
+            for key in self.issn_to_rating:
+                if key == journal:
+                    return self.issn_to_rating[key]
+            return "no match"
 
-        for row in reader:
-            journal = row['Journal Title'].strip().lower()
-            rating = row['2022 rating'].strip()
-            if journal:  # nur gültige Zeilen
-                ranking[journal] = rating
+        elif 65 <= ascii_code <= 90 or 97 <= ascii_code <= 122: #for letters ie journal name
+            for key in self.name_to_rating:
+                if key == journal:
+                    return self.name_to_rating[key]
+            return "no match"
 
-        return ranking
-
-    def match_ranking(self, journal_name: str):
-        if not journal_name:
-            return None
-        key = journal_name.strip().lower()
-        return self.ranking_data.get(key, None)
-
+        # Invalid format
+        else:
+            return "Unrecognized input format"
