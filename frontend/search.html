@@ -71,7 +71,15 @@
           </button>
         </div>
       </div>
-
+<!-- Sortierfeld (schmal & kompakt) -->
+          <select
+            id="sortOption"
+            class="p-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none w-36"
+          >
+            <option value="">Sort</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+          </select>
       <!-- Apply Filters -->
       <button onclick="performSearch()" class="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
         Apply Filters
@@ -98,15 +106,7 @@
           <button onclick="exportPapers()" class="bg-green-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700">Export</button>
             Search
           </button>
-          <!-- Sortierfeld (schmal & kompakt) -->
-          <select
-            id="sortOption"
-            class="p-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none w-36"
-          >
-            <option value="">Sort</option>
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-          </select>
+          
         </div>
       </div>
 
