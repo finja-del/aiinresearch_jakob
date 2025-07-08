@@ -4,10 +4,7 @@ from typing import Optional
 
 import requests
 import os
-from datetime import date
-
-from pydantic import json
-
+from backend.services.WosLinkService import WosLinkService
 from backend.models.FilterCriteria import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
