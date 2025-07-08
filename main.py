@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from backend.controller.SearchController import router as search_router
 
 app = FastAPI()
+#komentar zum pushen
 
 # Mount frontend static files
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
