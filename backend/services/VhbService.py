@@ -21,6 +21,8 @@ import json
 import re
 from pathlib import Path
 from typing import Dict, Optional, Union
+from rapidfuzz import process, fuzz
+
 
 
 # Standard‑Pfad relativ zum Projekt‑Root
@@ -90,9 +92,18 @@ class VhbService:
 
         # 2) Versuch: Titel (Lowercase, kollabierter Whitespace)
         if journal_title:
-            rating = self._name_to_rating.get(self._norm(journal_title))
+            normed = self._norm(journal_title)
+            rating = self._name_to_rating.get(normed)
             if rating:
                 return rating
+
+            # Fuzzy-Match-Versuch
+
+            result = process.extractOne(normed, self._name_to_rating.keys(), scorer=fuzz.ratio)
+            if result is not None:
+                best_match, score, _ = result
+                if score > 90:
+                    return self._name_to_rating[best_match]
 
         return "N/A"
 
