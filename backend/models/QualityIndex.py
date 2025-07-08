@@ -1,3 +1,6 @@
+## Made previously, however, it was determined to be redundant in its need. 
+## Needs to be trained and further coded to be able to find the values (such as h-index) from the information given to api. 
+
 import pandas as pd
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
