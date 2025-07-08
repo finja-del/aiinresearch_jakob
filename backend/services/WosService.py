@@ -12,11 +12,12 @@ from dotenv import load_dotenv
 
 
 class WOSService(PaperRestService):
-    def __init__(self, ranking):
+    def __init__(self, VhbRanking, abdcRanking):
         load_dotenv()
         self.api_key = os.getenv('WOS_API_KEY')
         self.base_url = "https://api.clarivate.com/apis/wos-starter/v1/documents"
-        self.vhbRanking = ranking
+        self.vhbRanking = VhbRanking
+        self.abdcRanking = abdcRanking
 
 
     def query(self, search_term: str, filter_criteria: Optional[FilterCriteria] = None) -> list[PaperDTO]:
@@ -63,6 +64,7 @@ class WOSService(PaperRestService):
                     date=str(year) if year else "1900",
                     source='WOK',
                     vhbRanking=self.vhbRanking.getRanking(journal, issn),
+                    abdcRanking= self.abdcRanking.getRanking(journal, issn),
                     journal_name=journal,
                     issn=issn,
                     eissn=eissn,

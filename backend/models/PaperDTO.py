@@ -1,6 +1,6 @@
 
 class PaperDTO:
-    def __init__(self, title, authors, abstract, date, source, vhbRanking,abcRanking,
+    def __init__(self, title, authors, abstract, date, source, vhbRanking,abdcRanking,
                  journal_name=None, issn=None, eissn=None, doi=None, url=None,
                  citations=None, journal_quartile=None):
         self.title = title
@@ -9,7 +9,7 @@ class PaperDTO:
         self.date = date
         self.source = source
         self.vhbRanking = vhbRanking
-        self.abcRanking = abcRanking
+        self.abdcRanking = abdcRanking
         self.journal_name = journal_name
         self.issn = issn
         self.eissn = eissn
@@ -29,7 +29,7 @@ class PaperDTO:
             'date': self.date,
             'source': self.source,
             'vhbRanking': self.vhbRanking,
-            'abcRanking': self.abcRanking,
+            'abdcRanking': self.abdcRanking,
             'journal_name': self.journal_name,
             'issn': self.issn,
             'eissn': self.eissn,

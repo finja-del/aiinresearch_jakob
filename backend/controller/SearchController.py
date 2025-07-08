@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Query
 from typing import Optional
+
+from backend.services.AbdcService import AbdcService
 from backend.services.ScopusService import ScopusService
 from backend.services.OpenalexService import OpenAlexService
 from backend.services.VhbService import VhbService
@@ -56,11 +58,12 @@ class SearchController:
 
         # VHB-Ranking initialisieren
         self.vhbRanking = VhbService()
+        self.abdcRanking = AbdcService()
 
         # API-Clients initialisieren
-        self.scopus = ScopusService(self.vhbRanking)
-        self.openalex = OpenAlexService(self.vhbRanking)
-        self.wos = WOSService(self.vhbRanking)
+        self.scopus = ScopusService(self.vhbRanking, self.abdcRanking)
+        self.openalex = OpenAlexService(self.vhbRanking, self.abdcRanking)
+        self.wos = WOSService(self.vhbRanking, self.abdcRanking)
 
     def checkServices(self, filters):
         self.apiClients = []

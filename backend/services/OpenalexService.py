@@ -10,9 +10,10 @@ import json
 
 
 class OpenAlexService(PaperRestService):
-    def __init__(self, vhbRanking): #neu Finja
+    def __init__(self, vhbRanking, abdcRanking): #neu Finja
         self.base_url = "https://api.openalex.org/works"
         self.vhbRanking = vhbRanking #neu Finja
+        self.abdcRanking = abdcRanking
 
     def query(self, search_term: str, filter_criteria: Optional[FilterCriteria] = None) -> List[PaperDTO]:
         params = {
@@ -69,6 +70,7 @@ class OpenAlexService(PaperRestService):
                     date=result.get('publication_date', '1900-01-01'),
                     source='OpenAlex',
                     vhbRanking= self.vhbRanking.getRanking(source.get('issn_l',source.get('display_name'))),
+                    abdcRanking=self.abdcRanking.getRanking(source.get('issn_l', source.get('display_name'))),
                     journal_name=source.get('display_name'),
                     issn=source.get('issn_l'),
                     eissn=None,

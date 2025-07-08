@@ -8,6 +8,7 @@ from backend.models.FilterCriteria import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 from backend.services.ScopusLinkService import ScopusLinkService
+from backend.models.JournalFilter import JournalFilter
 import json
 
 
@@ -18,7 +19,7 @@ class ScopusService(PaperRestService):
         self.api_key = os.getenv('SCOPUS.APIKEY')
         self.base_url = "https://api.elsevier.com/content/search/scopus"
         self.vhbRanking = vhbRanking
-        self.abcRanking = abcRanking
+        self.abdcRanking = abcRanking
 
     def build_query(self, search_term: str, filters: Optional[FilterCriteria]) -> str:
         query_parts = [f"TITLE({search_term})"]
@@ -71,7 +72,7 @@ class ScopusService(PaperRestService):
                 journal_name = result.get("prism:publicationName", "N/A")
                 issn = result.get("prism:issn", "N/A")
                 vhbScore = self.vhbRanking.getRanking(journal_name, issn)  # kann später umgebaut werden
-                abcScore = self.abc
+                abdcScore = self.abdcRanking.getRanking(journal_name, issn)  # kann später umgebaut werden
                 paper = PaperDTO(
                     title=result.get("dc:title", "N/A"),
                     authors=[result.get("dc:creator")] if result.get("dc:creator") else [],
@@ -79,7 +80,7 @@ class ScopusService(PaperRestService):
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
                     vhbRanking=vhbScore,
-                    abcRanking=
+                    abdcRanking=abdcScore,
                     journal_name=journal_name,
                     issn=result.get("prism:issn"),
                     eissn=result.get("prism:eIssn"),
@@ -88,7 +89,10 @@ class ScopusService(PaperRestService):
                     citations=int(result.get("citedby-count", 0))
                 )
 
-                print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | VHB-Ranking: {vhbScore}")
+                if paper.vhbRanking != "N/A":
+                    print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | VHB-Ranking: {vhbScore}")
+                if paper.abdcRanking != "N/A":
+                    print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | ABDC-Ranking: {abdcScore}")
 
                 results.append(paper)
 

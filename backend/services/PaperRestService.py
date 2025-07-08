@@ -9,4 +9,3 @@ class PaperRestService(ABC):
     def getPaperList(self, searchTerm: str, filters: FilterCriteria) -> list[PaperDTO]:
         return []
 
-    #TODO:  beforeDate: date, afterDate: date nacher in Funktionsparameter einfügen
