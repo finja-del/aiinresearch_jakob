@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from backend.controller.SearchController import router as search_router
+from backend.controller.ExportController import router as export_router
 
 app = FastAPI()
 #komentar zum pushen
@@ -20,6 +21,8 @@ async def search():
 
 # Include search API routes
 app.include_router(search_router, prefix="/api")
+# Include export API routes
+app.include_router(export_router, prefix="/api")
 
 # For local testing
 if __name__ == "__main__":

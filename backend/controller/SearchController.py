@@ -78,10 +78,13 @@ class SearchController:
     def checkServices(self, filters):
         self.apiClients = []
         if filters.scopus:
+            print("🔍 Scopus is enabled.")
             self.apiClients.append(self.scopus)
         if filters.openalex:
+            print("🔍 OpenAlex is enabled.")
             self.apiClients.append(self.openalex)
         if filters.wos:
+            print("🔍 Web of Science is enabled.")
             self.apiClients.append(self.wos)
 
     def searchPapers(self, searchTerm: str, filters) -> list[dict]:
