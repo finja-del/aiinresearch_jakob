@@ -13,11 +13,12 @@ import json
 
 class ScopusService(PaperRestService):
 
-    def __init__(self, vhbRanking):
+    def __init__(self, vhbRanking, abcRanking):
         load_dotenv()
         self.api_key = os.getenv('SCOPUS.APIKEY')
         self.base_url = "https://api.elsevier.com/content/search/scopus"
         self.vhbRanking = vhbRanking
+        self.abcRanking = abcRanking
 
     def build_query(self, search_term: str, filters: Optional[FilterCriteria]) -> str:
         query_parts = [f"TITLE({search_term})"]
@@ -70,7 +71,7 @@ class ScopusService(PaperRestService):
                 journal_name = result.get("prism:publicationName", "N/A")
                 issn = result.get("prism:issn", "N/A")
                 vhbScore = self.vhbRanking.getRanking(journal_name, issn)  # kann später umgebaut werden
-
+                abcScore = self.abc
                 paper = PaperDTO(
                     title=result.get("dc:title", "N/A"),
                     authors=[result.get("dc:creator")] if result.get("dc:creator") else [],
@@ -78,6 +79,7 @@ class ScopusService(PaperRestService):
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
                     vhbRanking=vhbScore,
+                    abcRanking=
                     journal_name=journal_name,
                     issn=result.get("prism:issn"),
                     eissn=result.get("prism:eIssn"),
