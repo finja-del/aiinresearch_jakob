@@ -70,6 +70,59 @@ function renderYearChart(data) {
     }
   });
 }
+//Exportieren der Chart-Daten als CSV
+ async function exportPapers() {
+    
+    try {
+        // Annahme: publicationData enthält die PaperDTO-Liste
+         const papersToExport = selectedPapers.map(paper => ({
+            title: paper.title || "N/A",
+            authors: paper.authors || "Unknown Author", // falls vorhanden
+            abstract: paper.abstract || "",              // falls vorhanden
+            date: paper.date || "", // falls vorhanden, Standardwert
+            source: paper.source || "",                 // falls vorhanden
+            quality_score: paper.quality_score || 0.0,  // falls vorhanden
+            journal_name: paper.journal_name || "",     // falls vorhanden
+            issn: paper.issn || "",
+            eissn: paper.eISSN || "",
+            doi: paper.doi || "",
+            url: paper.url || "",
+            citations: paper.citations || 0,            // falls vorhanden
+            journal_quartile: paper.journal_quartile || "" // falls vorhanden
+        }));
+        console.log("Exportiere folgende Daten:", papersToExport);
+        const response = await axios.post("/api/export", papersToExport, {  
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("Export erfolgreich:", response.data);
+        
+    } catch (error) {
+        //console.error("Fehler beim Export:", error);
+         console.error("Fehler beim Export:", error);
+
+        // Speichere die fehlerhafte Liste lokal als Debug-Hilfe
+        const textToSave = JSON.stringify(papersToExport, null, 2);
+        saveTextAsFile("papers_export_failed_backup.txt", textToSave);
+
+        alert("Fehler beim Export! Die Daten wurden als Backup lokal gespeichert.");
+    }
+}
+
+
+function toggleSelect(index, btn) {
+    if (!btn.classList.contains('text-green-600')) {
+        btn.classList.add('text-green-600');
+        btn.textContent = '✅ Selected';
+        selectedPapers.add(publicationData[index],index);
+    } else {
+        btn.classList.remove('text-green-600');
+        btn.textContent = '◯ Select';
+        selectedPapers.delete(publicationData[index]);
+    }
+}
 
 // ===================================================
 // 🔍 Hauptsuche: Filter sammeln, API aufrufen, anzeigen
