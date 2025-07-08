@@ -16,10 +16,14 @@ let yearRange = { from: "", to: "" };
 init();
 
 async function init() {
-  const response = await axios.get("/api/search?q=");
-  publicationData = response.data;
-  renderYearChart(publicationData);
-  performSearch();
+  try {
+    const response = await axios.get("/api/search?q=");
+    publicationData = response.data;
+    renderYearChart(publicationData);
+    performSearch();
+  } catch (err) {
+    console.error("Initial load failed:", err);
+  }
 }
 
 // ===================================================
@@ -27,18 +31,24 @@ async function init() {
 // ===================================================
 
 function renderYearChart(data) {
-  console.log(data);
   const yearCounts = {};
 
   data.forEach(item => {
     const year = item.date?.split("-")[0];
-    if (year) yearCounts[year] = (yearCounts[year] || 0) + 1;
+    if (year) {
+      yearCounts[year] = (yearCounts[year] || 0) + 1;
+    }
   });
 
   const years = Object.keys(yearCounts);
   const counts = Object.values(yearCounts);
 
-  const ctx = document.getElementById("yearChart").getContext("2d");
+  const ctx = document.getElementById("yearChart")?.getContext("2d");
+  if (!ctx) {
+    console.error("yearChart Canvas not found");
+    return;
+  }
+
   if (yearChart) yearChart.destroy();
 
   yearChart = new Chart(ctx, {
@@ -66,12 +76,13 @@ function renderYearChart(data) {
 // ===================================================
 
 async function performSearch() {
+  const searchInput = document.getElementById("searchInput")?.value?.trim() || "";
+  const yearFrom = parseInt(document.getElementById("yearFrom")?.value) || 0;
+  const yearTo = parseInt(document.getElementById("yearTo")?.value) || 9999;
+
   const payload = {
-    q: document.getElementById("searchInput").value.trim(),
-    range: {
-      start: parseInt(document.getElementById("yearFrom").value),
-      end: parseInt(document.getElementById("yearTo").value)
-    },
+    q: searchInput,
+    range: { start: yearFrom, end: yearTo },
     source: Array.from(document.querySelectorAll(".sourceCheckbox"))
       .filter(cb => cb.checked)
       .map(cb => cb.value),
@@ -79,19 +90,24 @@ async function performSearch() {
     rating: []
   };
 
-  const response = await axios.post("/api/search", payload);
-  const data = response.data;
-
-  const sortOption = document.getElementById("sortOption").value;
-
   const container = document.getElementById("resultsContainer");
+  if (!container) {
+    console.error("Results container not found");
+    return;
+  }
+
   container.innerHTML = "<p class='text-gray-600'>Loading...</p>";
 
   try {
+    const response = await axios.post("/api/search", payload);
+    const data = response.data;
+
     if (!Array.isArray(data) || data.length === 0) {
       container.innerHTML = "<p class='text-gray-500 text-center'>No results found.</p>";
       return;
     }
+
+    const sortOption = document.getElementById("sortOption")?.value;
 
     if (sortOption === "newest") {
       data.sort((a, b) => new Date(b.date) - new Date(a.date));
