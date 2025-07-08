@@ -48,7 +48,7 @@ def search_post(filters: FilterCriteriaIn):
 
     filter_criteria = FilterCriteria(
         scopus="scopus" in sources,
-        wos="wos" in sources,
+        wos="web of web of science" in sources,
         openalex="openalex" in sources,
         # language=filters.language,
         # author=filters.author,
