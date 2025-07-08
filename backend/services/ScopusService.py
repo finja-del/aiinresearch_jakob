@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from backend.models.FilterCriteria import FilterCriteria
 from backend.services.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
+from backend.services.ScopusLinkService import ScopusLinkService
 import json
 
 
@@ -80,8 +81,8 @@ class ScopusService(PaperRestService):
                     journal_name=journal_name,
                     issn=result.get("prism:issn"),
                     eissn=result.get("prism:eIssn"),
-                    doi=result.get("prism:doi"),
-                    url=result.get("prism:url"),
+                    doi=ScopusLinkService.get_doi_link(result),
+                    url=ScopusLinkService.get_doi_link(result),
                     citations=int(result.get("citedby-count", 0))
                 )
 
