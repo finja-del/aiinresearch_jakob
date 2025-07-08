@@ -11,25 +11,27 @@
 </head>
 
 <body class="bg-gray-100 font-sans">
-  <!-- ===========================
-       🔷 HEADER
-       =========================== -->
+  <!-- HEADER -->
   <header class="bg-gray-800 text-white px-6 py-4">
     <h1 class="text-xl font-bold">Web of Research</h1>
   </header>
 
   <div class="flex min-h-[calc(100vh-64px)]">
-    <!-- ===========================
-         🧭 SIDEBAR – Filterbereich
-         =========================== -->
+    <!-- SIDEBAR -->
     <aside class="w-64 bg-white shadow p-6">
       <h2 class="font-semibold text-lg mb-4">Filters</h2>
 
       <!-- Sources -->
       <p class="block mb-2 text-sm font-medium">Sources</p>
-      <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex</label>
-      <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="Web of Science" checked /> Web of Science</label>
-      <label class="block mb-4"><input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus</label>
+      <label class="block mb-1">
+        <input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex
+      </label>
+      <label class="block mb-1">
+        <input type="checkbox" class="sourceCheckbox mr-2" value="Web of Science" checked /> Web of Science
+      </label>
+      <label class="block mb-4">
+        <input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus
+      </label>
 
       <!-- Year Chart -->
       <p class="block mb-2 text-sm font-medium">Year (click to select)</p>
@@ -44,14 +46,11 @@
       <!-- Ranking Filter Section -->
       <div class="mb-2">
         <div class="flex">
-          <!-- Ranking Sources -->
           <div class="w-1/2 pr-4 border-r border-gray-300">
             <p class="block mb-2 text-sm font-medium">Ranking</p>
             <label class="block mb-1"><input type="checkbox" class="rankingSourceCheckbox mr-2" value="vhb" checked /> VHB</label>
             <label class="block mb-1"><input type="checkbox" class="rankingSourceCheckbox mr-2" value="abdc" checked /> ABDC</label>
           </div>
-
-          <!-- Ratings -->
           <div class="w-1/2 pl-4">
             <p class="block mb-2 text-sm font-medium">Ratings</p>
             <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A*/A+" /> A* / A+</label>
@@ -64,46 +63,58 @@
 
         <!-- Select/Deselect Buttons -->
         <div class="flex gap-2 mt-2">
-          <button onclick="selectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">Select All</button>
-          <button onclick="deselectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">Deselect All</button>
+          <button onclick="selectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
+            Select All
+          </button>
+          <button onclick="deselectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
+            Deselect All
+          </button>
         </div>
       </div>
 
       <!-- Apply Filters -->
-      <button onclick="performSearch()" class="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Apply Filters</button>
+      <button onclick="performSearch()" class="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Apply Filters
+      </button>
     </aside>
 
-    <!-- ===========================
-         📄 MAIN – Suchfeld & Ergebnisse
-         =========================== -->
+    <!-- MAIN -->
     <main class="flex-grow flex flex-col items-center justify-start p-8 relative">
-      <!-- 🔍 Suchfeld & Sortierung -->
+      <!-- Suchfeld & Sortierung auf einer Linie -->
       <div class="w-full max-w-2xl mb-6">
-        <!-- Suchleiste -->
-        <div class="flex">
-          <input id="searchInput" type="text" placeholder="Enter search term..." class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-500" />
-          <button onclick="performSearch()" class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700">Search</button>
-        </div>
-
-        <!-- 🔃 Sortierung -->
-        <div class="mt-4">
-          <label for="sortOption" class="block mb-1 text-sm font-medium">Sort by</label>
-          <select id="sortOption" class="w-full p-2 border rounded">
-            <option value="">No sorting</option>
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
+        <div class="flex gap-2 items-center">
+          <!-- Suchfeld -->
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Enter search term..."
+            class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-500"
+          />
+          <!-- Search-Button -->
+          <button
+            onclick="performSearch()"
+            class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 whitespace-nowrap"
+          >
+            Search
+          </button>
+          <!-- Sortierfeld (schmal & kompakt) -->
+          <select
+            id="sortOption"
+            class="p-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none w-36"
+          >
+            <option value="">Sort</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
           </select>
         </div>
       </div>
 
-      <!-- 📋 Ergebniscontainer -->
+      <!-- Ergebniscontainer -->
       <div id="resultsContainer" class="w-full max-w-3xl space-y-4"></div>
     </main>
   </div>
 
-  <!-- ===========================
-       🧠 SCRIPTS
-       =========================== -->
+  <!-- SCRIPTS -->
   <script>
     function selectAllRatings() {
       document.querySelectorAll(".rankingSourceCheckbox, .ratingCheckbox").forEach(cb => cb.checked = true);
