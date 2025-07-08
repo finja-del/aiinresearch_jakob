@@ -67,7 +67,7 @@ class SearchController:
 
     def __init__(self):
         base_path = os.path.dirname(__file__)  # ← liegt in controller/
-        csv_path = os.path.join(base_path, '..', 'data', 'abc_ranking.csv')
+        csv_path = os.path.join(base_path, '..', 'data', 'abdc_ranking.json')
         self.abc_ranking = Ranking(csv_path) #neu Finja
 
         # API-Clients initialisieren
