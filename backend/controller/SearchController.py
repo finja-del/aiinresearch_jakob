@@ -44,7 +44,20 @@ def search_route(
 @router.post("/search")
 def search_post(filters: FilterCriteriaIn):
 
-    filter_criteria = SearchController.to_filter_criteria(filters)
+    sources = [s.lower() for s in filters.source or []]
+
+    filter_criteria = FilterCriteria(
+        scopus="scopus" in sources,
+        wos="web of science" in sources,
+        openalex="openalex" in sources,
+        # language=filters.language,
+        # author=filters.author,
+        start_year=filters.range.start if filters.range else None,
+        end_year=filters.range.end if filters.range else None,
+        ranking=filters.ranking,
+        rating=filters.rating
+
+    )
 
     controller = SearchController()
     return controller.searchPapers(filters.q, filter_criteria)
@@ -83,16 +96,3 @@ class SearchController:
             all_results += results
 
         return [paper.to_api_dict() for paper in all_results]
-
-    @staticmethod
-    def to_filter_criteria(inp: FilterCriteriaIn) -> FilterCriteria:
-        sources = [s.lower() for s in (inp.source or [])]
-        return FilterCriteria(
-            scopus="scopus" in sources,
-            wos="wos" in sources,
-            openalex="openalex" in sources,
-            start_year=inp.range.start if inp.range else None,
-            end_year=inp.range.end if inp.range else None,
-            ranking=inp.ranking,
-            rating=inp.rating
-        )

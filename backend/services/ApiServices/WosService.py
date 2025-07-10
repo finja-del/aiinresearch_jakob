@@ -22,7 +22,7 @@ class WOSService(PaperRestService):
     def query(self, search_term: str, filter_criteria: Optional[FilterCriteria] = None) -> list[PaperDTO]:
         headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
         params = {
-            'db': 'WOK',
+            'db': 'WOS',
             'q': self.filterService(search_term, filter_criteria),
             'limit': 20
         }
