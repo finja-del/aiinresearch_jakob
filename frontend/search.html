@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Web of Research</title>
@@ -11,108 +11,128 @@
 </head>
 
 <body class="bg-gray-100 font-sans">
-
-  <!-- ===========================
-       🔷 HEADER
-       =========================== -->
+  <!-- HEADER -->
   <header class="bg-gray-800 text-white px-6 py-4">
     <h1 class="text-xl font-bold">Web of Research</h1>
   </header>
 
   <div class="flex min-h-[calc(100vh-64px)]">
-
-    <!-- ===========================
-         🧭 SIDEBAR – Filterbereich
-         =========================== -->
+    <!-- SIDEBAR -->
     <aside class="w-64 bg-white shadow p-6">
-      <h2 class="font-semibold text-lg mb-4">Filter</h2>
+      <h2 class="font-semibold text-lg mb-4">Filters</h2>
 
-      <!-- 📅 Jahr-Chart -->
-      <p class="block mb-2 text-sm font-medium">Year (selectable by click)</p>
-      <canvas id="yearChart" height="200" class="mb-2"></canvas>
+      <!-- Sources -->
+      <p class="block mb-2 text-sm font-medium">Sources</p>
+      <label class="block mb-1">
+        <input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex
+      </label>
+      <label class="block mb-1">
+        <input type="checkbox" class="sourceCheckbox mr-2" value="Web of Science" checked /> Web of Science
+      </label>
+      <label class="block mb-4">
+        <input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus
+      </label>
 
-      <!-- 📆 Jahr-Felder -->
-      <div class="grid grid-cols-6 gap-1 mb-2">
-        <label class="col-span-1 text-sm flex items-center">From</label>
-        <input id="yearFrom" type="number" class="col-span-2 p-1 border rounded text-sm w-full" />
-        <label class="col-span-1 text-sm flex items-center">Until</label>
-        <input id="yearTo" type="number" class="col-span-2 p-1 border rounded text-sm w-full" />
+      <!-- Year Chart -->
+      <p class="block mb-2 text-sm font-medium">Year (click to select)</p>
+      <canvas id="yearChart" height="200" class="mb-2 bg-white rounded shadow"></canvas>
+      <div class="flex items-center gap-2 mb-6">
+        <label class="text-sm">From</label>
+        <input id="yearFrom" type="number" class="p-2 border rounded text-sm w-[66px]" />
+        <label class="text-sm">To</label>
+        <input id="yearTo" type="number" class="p-2 border rounded text-sm w-[66px]" />
       </div>
 
-      <!-- 📤 Jahr-Anwenden/Zurücksetzen -->
-      <button onclick="updateYearRange()" class="w-full mb-2 text-sm bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600">
-        Update Year Filter
-      </button>
-      <button onclick="resetYearFilter()" class="w-full mb-6 text-sm bg-gray-300 text-gray-800 px-3 py-2 rounded hover:bg-gray-400">
-        Reset Year Filter
-      </button>
-
-      <!-- 🏷️ VHB-Ranking -->
-      <p class="block mb-2 text-sm font-medium">VHB-Ranking</p>
-      <div class="mb-4">
-        <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="A+/A" /> A+ / A</label>
-        <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="B/C" /> B / C</label>
-        <label class="block mb-1"><input type="checkbox" class="vhbCheckbox mr-2" value="D" /> D</label>
-      </div>
-
-      <!-- 🏷️ ABDC-Ranking -->
-      <p class="block mb-2 text-sm font-medium">ABDC-Ranking</p>
-      <div class="mb-4">
-        <label class="block mb-1"><input type="checkbox" class="abdcCheckbox mr-2" value="A*/A" /> A* / A</label>
-        <label class="block mb-1"><input type="checkbox" class="abdcCheckbox mr-2" value="B/C" /> B / C</label>
-      </div>
-
-      <!-- 🧪 Quellenfilter -->
-      <p class="block mb-2 text-sm font-medium">Database</p>
-      <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex</label>
-      <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="wos" checked /> Web of Science</label>
-      <label class="block mb-4"><input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus</label>
-
-      <!-- 🔃 Sortierung -->
-        <div class="mt-4">
-          <label for="sortOption" class="block mb-1 text-sm font-medium">Display Filters</label>
-          <select id="sortOption" class="w-full p-2 border rounded">
-            <option value="">No Filters</option>
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
+      <!-- Ranking Filter Section -->
+      <div class="mb-2">
+        <div class="flex">
+          <div class="w-1/2 pr-4 border-r border-gray-300">
+            <p class="block mb-2 text-sm font-medium">Ranking</p>
+            <label class="block mb-1"><input type="checkbox" class="rankingSourceCheckbox mr-2" value="vhb" checked /> VHB</label>
+            <label class="block mb-1"><input type="checkbox" class="rankingSourceCheckbox mr-2" value="abdc" checked /> ABDC</label>
+          </div>
+          <div class="w-1/2 pl-4">
+            <p class="block mb-2 text-sm font-medium">Ratings</p>
+            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A*/A+" /> A* / A+</label>
+            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A" /> A</label>
+            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="B" /> B</label>
+            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="C" /> C</label>
+            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="D" /> D</label>
+          </div>
         </div>
+
+        <!-- Select/Deselect Buttons -->
+        <div class="flex gap-2 mt-4 mb -2">
+          <button onclick="selectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
+            Select All
+          </button>
+          <button onclick="deselectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
+            Deselect All
+          </button>
+        </div>
+      </div>
+      <!-- Sortierfeld (schmal & kompakt) -->
+          <select
+            id="sortOption"
+            class="p-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none w-36"
+          >
+            <option value="">Sort</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+          </select>
+      <!-- Apply Filters -->
+      <button onclick="performSearch()" class="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Apply Filters
+      </button>
     </aside>
 
-    <!-- ===========================
-         📄 MAIN – Suchfeld & Ergebnisse
-         =========================== -->
+    <!-- MAIN -->
     <main class="flex-grow flex flex-col items-center justify-start p-8 relative">
-      
-      <!-- 🔍 Suchfeld & Sortierung -->
+      <!-- Suchfeld & Sortierung auf einer Linie -->
       <div class="w-full max-w-2xl mb-6">
-
-        <!-- Suchleiste -->
-        <div class="flex">
+        <div class="flex gap-2 items-center">
+          <!-- Suchfeld -->
           <input
             id="searchInput"
             type="text"
-            placeholder="Search Database.."
-            class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring focus:border-blue-500"
+            placeholder="Enter search term..."
+            class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-500"
           />
-          <button
-            onclick="performSearch()"
-            class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700"
-          >
-            Search
-          </button>
-        </div>
+          <!-- Search-Button -->
+          <div class="flex space-x-2">
+            <button
+              onclick="performSearch()"
+              class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 whitespace-nowrap"
+            >
+              Search
+            </button>
 
+            <button
+              onclick="exportPapers()"
+              class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 whitespace-nowrap"
+            >
+              Export
+            </button>
+          </div>
+
+        </div>
       </div>
 
-      <!-- 📋 Ergebniscontainer -->
+      <!-- Ergebniscontainer -->
       <div id="resultsContainer" class="w-full max-w-3xl space-y-4"></div>
     </main>
   </div>
 
-  <!-- ===========================
-       🧠 SCRIPTS
-       =========================== -->
+  <!-- SCRIPTS -->
+  <script>
+    function selectAllRatings() {
+      document.querySelectorAll(".rankingSourceCheckbox, .ratingCheckbox").forEach(cb => cb.checked = true);
+    }
+
+    function deselectAllRatings() {
+      document.querySelectorAll(".rankingSourceCheckbox, .ratingCheckbox").forEach(cb => cb.checked = false);
+    }
+  </script>
   <script src="/static/script.js" defer></script>
 </body>
 </html>
