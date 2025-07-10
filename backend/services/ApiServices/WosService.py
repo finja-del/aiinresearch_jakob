@@ -22,9 +22,24 @@ class WOSService(PaperRestService):
 
     def query(self, search_term: str, filters) -> list[PaperDTO]:
         headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
+
+        query_parts = [f'TI="{search_term}"']
+        # --- year filtering ---
+        if filters.start_year and filters.end_year:
+            # WoS Starter API often ignores ranges; build explicit OR list instead
+            years = range(filters.start_year, filters.end_year + 1)
+            year_query = " OR ".join([f'PY=({y})' for y in years])
+            query_parts.append(f'({year_query})')
+        elif filters.start_year:
+            query_parts.append(f'PY=({filters.start_year})')
+        elif filters.end_year:
+            query_parts.append(f'PY=({filters.end_year})')
+
+        query_str = ' AND '.join(query_parts)
+
         params = {
             'db': 'WOK',
-            'q': f'TI={search_term}'
+            'q': query_str
         }
 
         results: list[PaperDTO] = []
@@ -37,8 +52,7 @@ class WOSService(PaperRestService):
 
 
             hits = data.get("hits", [])
-            authors = []
-            citations = 0
+
             for hit in hits:
                 title = hit.get('title') or 'N/A'
                 if isinstance(title, dict):
