@@ -9,22 +9,22 @@ from backend.services.ApiServices.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 from dotenv import load_dotenv
 
+from backend.services.Filterservices.WosLinkService import WosLinkService
+
 
 class WOSService(PaperRestService):
-    def __init__(self, VhbRanking, abdcRanking):
+    def __init__(self, vhbRanking, abdcRanking):
         load_dotenv()
         self.api_key = os.getenv('WOS_API_KEY')
         self.base_url = "https://api.clarivate.com/apis/wos-starter/v1/documents"
-        self.vhbRanking = VhbRanking
+        self.vhbRanking = vhbRanking
         self.abdcRanking = abdcRanking
 
-
-    def query(self, search_term: str, filter_criteria: Optional[FilterCriteria] = None) -> list[PaperDTO]:
+    def query(self, search_term: str, filters) -> list[PaperDTO]:
         headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
         params = {
-            'db': 'WOS',
-            'q': self.filterService(search_term, filter_criteria),
-            'limit': 20
+            'db': 'WOK',
+            'q': f'TI={search_term}'
         }
 
         results: list[PaperDTO] = []
@@ -35,7 +35,6 @@ class WOSService(PaperRestService):
             response.raise_for_status()
             data = response.json()
 
-            #print(json.dumps(data, indent=2))
 
             hits = data.get("hits", [])
             authors = []
@@ -67,8 +66,8 @@ class WOSService(PaperRestService):
                     journal_name=journal,
                     issn=issn,
                     eissn=eissn,
-                    doi=doi,
-                    url=url,
+                    doi=WosLinkService.get_doi_link(hit),
+                    url=WosLinkService.get_wos_url(hit),
                     citations=citations
                 )
 
@@ -80,23 +79,6 @@ class WOSService(PaperRestService):
 
         return results
 
-
-
-
-    def filterService(self, search_term: str, filter_criteria: Optional[FilterCriteria] = None) -> str:
-        q = f"TI={search_term}"
-        print(f"Fliter start data:  {filter_criteria.start_year}")
-        if filter_criteria.start_year and filter_criteria.end_year:
-            q += f" AND DOP={filter_criteria.start_year}/{filter_criteria.end_year}"
-        elif filter_criteria.start_year and not filter_criteria.end_year:
-            q += f" AND DOP={filter_criteria.start_year}"
-        elif filter_criteria.end_year and not filter_criteria.start_year:
-            q += f" AND DOP={filter_criteria.end_year}"
-        if filter_criteria.author:
-            q += f" AND AU={filter_criteria.author}"
-
-        print(q)
-        return q
 
 
     def getPaperList(self, searchTerm: str, filters: FilterCriteria) -> list[PaperDTO]:

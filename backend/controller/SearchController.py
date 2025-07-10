@@ -9,6 +9,7 @@ from backend.services.ApiServices.WosService import WOSService
 from backend.models.PaperDTO import PaperDTO
 from backend.models.FilterCriteria import FilterCriteria, FilterCriteriaIn
 
+
 # 🔹 Define the router
 router = APIRouter()
 
@@ -43,7 +44,6 @@ def search_route(
 # 🔹 API route for POST requests
 @router.post("/search")
 def search_post(filters: FilterCriteriaIn):
-
     sources = [s.lower() for s in filters.source or []]
 
     filter_criteria = FilterCriteria(
@@ -79,10 +79,13 @@ class SearchController:
     def checkServices(self, filters):
         self.apiClients = []
         if filters.scopus:
+            print("🔍 Scopus is enabled.")
             self.apiClients.append(self.scopus)
         if filters.openalex:
+            print("🔍 OpenAlex is enabled.")
             self.apiClients.append(self.openalex)
         if filters.wos:
+            print("🔍 Web of Science is enabled.")
             self.apiClients.append(self.wos)
 
     def searchPapers(self, searchTerm: str, filters) -> list[dict]:
