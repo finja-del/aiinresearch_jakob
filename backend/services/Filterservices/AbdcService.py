@@ -1,8 +1,8 @@
 """
-VhbService
+AbcService
 ==========
 
-Hilfs‑Service, um VHB‑JOURQUAL‑3 Ratings (A+, A, B, C, D) zu einem Journal
+Hilfs‑Service, um ABC‑Ranking‑3 Ratings (A+, A, B, C, D) zu einem Journal
 bereitzustellen.  Er wird einmal beim Programmstart initialisiert und dann von
 anderen Services (z. B. ScopusService, WosService) für jedes gefundene Paper
 aufgerufen.
@@ -26,11 +26,11 @@ from rapidfuzz import process, fuzz
 
 
 # Standard‑Pfad relativ zum Projekt‑Root
-_DEFAULT_JSON = Path(__file__).resolve().parent.parent / "data" / "vhb_ranking.json"
+_DEFAULT_JSON = Path(__file__).resolve().parent.parent.parent / "data" / "abdc_ranking.json"
 
 
-class VhbService:
-    """Liefert VHB‑Ratings in O(1)."""
+class AbdcService:
+    """Liefert ABC‑Ratings in O(1)."""
 
     # ------------------------------------------------------------------ #
     # Konstruktor
@@ -43,7 +43,7 @@ class VhbService:
             • Pfad zu einer JSON‑Datei,
             • oder bereits geladenes Dict mit den Keys
               ``issn_to_rating`` **und/oder** ``name_to_rating``.
-            Wird nichts angegeben, wird die Datei *backend/data/vhb_ranking.json*
+            Wird nichts angegeben, wird die Datei *backend/data/abc_ranking.json*
             verwendet.
         """
         if isinstance(ranking_source, (str, Path)):
@@ -72,7 +72,7 @@ class VhbService:
                    journal_title: Optional[str] = None,
                    issn: Optional[str] = None) -> str:
         """
-        Liefert das VHB‑Rating für ein Journal.
+        Liefert das ABC‑Rating für ein Journal.
 
         Parameters
         ----------

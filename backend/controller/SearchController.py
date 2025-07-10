@@ -1,15 +1,13 @@
 from fastapi import APIRouter, Query
 from typing import Optional
 
-from backend.services.AbdcService import AbdcService
-from backend.services.ScopusService import ScopusService
-from backend.services.OpenalexService import OpenAlexService
-from backend.services.VhbService import VhbService
-from backend.services.WosService import WOSService
+from backend.services.Filterservices.AbdcService import AbdcService
+from backend.services.ApiServices.ScopusService import ScopusService
+from backend.services.ApiServices.OpenalexService import OpenAlexService
+from backend.services.Filterservices.VhbService import VhbService
+from backend.services.ApiServices.WosService import WOSService
 from backend.models.PaperDTO import PaperDTO
 from backend.models.FilterCriteria import FilterCriteria, FilterCriteriaIn
-import os
-
 
 # 🔹 Define the router
 router = APIRouter()

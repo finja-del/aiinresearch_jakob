@@ -5,11 +5,9 @@ from urllib.parse import quote_plus
 import requests
 from dotenv import load_dotenv
 from backend.models.FilterCriteria import FilterCriteria
-from backend.services.PaperRestService import PaperRestService
+from backend.services.ApiServices.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
-from backend.services.ScopusLinkService import ScopusLinkService
-from backend.models.JournalFilter import JournalFilter
-import json
+from backend.services.Filterservices.ScopusLinkService import ScopusLinkService
 
 
 class ScopusService(PaperRestService):

@@ -1,5 +1,5 @@
 import pytest
-from backend.services.VhbService import VhbService
+from backend.services.Filterservices.VhbService import VhbService
 
 vhb = VhbService()  # nimmt Default-JSON
 

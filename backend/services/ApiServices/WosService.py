@@ -4,9 +4,8 @@ from typing import Optional
 
 import requests
 import os
-from backend.services.WosLinkService import WosLinkService
 from backend.models.FilterCriteria import FilterCriteria
-from backend.services.PaperRestService import PaperRestService
+from backend.services.ApiServices.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 from dotenv import load_dotenv
 

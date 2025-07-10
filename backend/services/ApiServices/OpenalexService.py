@@ -4,9 +4,8 @@
 import requests
 from typing import List, Optional
 from backend.models.FilterCriteria import FilterCriteria
-from backend.services.PaperRestService import PaperRestService
+from backend.services.ApiServices.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
-import json
 
 
 class OpenAlexService(PaperRestService):
