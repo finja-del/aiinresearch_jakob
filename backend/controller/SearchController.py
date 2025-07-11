@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Query
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from backend.services.Deduplication.DuplicateMergeService import DuplicateMergeService
 from backend.services.Filterservices.AbdcService import AbdcService
 from backend.services.ApiServices.ScopusService import ScopusService
-from backend.services.ApiServices.OpenalexService import OpenAlexService
+from backend.services.ApiServices.OpenAlexService import OpenAlexService
 from backend.services.Filterservices.VhbService import VhbService
-from backend.services.ApiServices.WosService import WOSService
+from backend.services.ApiServices.WosService import WosService
 from backend.models.PaperDTO import PaperDTO
 from backend.models.FilterCriteria import FilterCriteria, FilterCriteriaIn
 
@@ -74,7 +75,7 @@ class SearchController:
         # API-Clients initialisieren
         self.scopus = ScopusService(self.vhbRanking, self.abdcRanking)
         self.openalex = OpenAlexService(self.vhbRanking, self.abdcRanking)
-        self.wos = WOSService(self.vhbRanking, self.abdcRanking)
+        self.wos = WosService(self.vhbRanking, self.abdcRanking)
 
     def checkServices(self, filters):
         self.apiClients = []
@@ -89,17 +90,50 @@ class SearchController:
             self.apiClients.append(self.wos)
 
     def searchPapers(self, searchTerm: str, filters) -> list[dict]:
+        """
+        Executes enabled data‑source queries in parallel using a ThreadPool.
+        Falls back to sequential execution if only one source is active.
+        """
         self.checkServices(filters)
         all_results: list[PaperDTO] = []
 
-        for apiClient in self.apiClients:
-            source = apiClient.__class__.__name__.replace("Service", "")
-            results = apiClient.getPaperList(searchTerm, filters)
-
-            for paper in results:
-                paper.source = source
-
-            print(f"🔍 {source} found {len(results)} papers.")
-            all_results += results
+        if len(self.apiClients) <= 1:
+            # ╰─► sequential fallback (existing behaviour)
+            for apiClient in self.apiClients:
+                source = apiClient.__class__.__name__.replace("Service", "")
+                results = apiClient.getPaperList(searchTerm, filters)
+                for paper in results:
+                    # set primary source name
+                    paper.source = source
+                    # keep sources set and count in sync (PaperDTO merge‑ready)
+                    if hasattr(paper, "sources"):
+                        paper.sources.add(source)
+                        paper.sourceCount = len(paper.sources)
+                print(f"🔍 {source} found {len(results)} papers.")
+                all_results += results
+        else:
+            # ╰─► parallel execution
+            with ThreadPoolExecutor(max_workers=len(self.apiClients)) as executor:
+                future_map = {
+                    executor.submit(c.getPaperList, searchTerm, filters): c
+                    for c in self.apiClients
+                }
+                for future in as_completed(future_map):
+                    apiClient = future_map[future]
+                    source = apiClient.__class__.__name__.replace("Service", "")
+                    try:
+                        results = future.result()
+                    except Exception as exc:
+                        print(f"[ERR] {source} raised {exc!r}")
+                        results = []
+                    for paper in results:
+                        # set primary source name
+                        paper.source = source
+                        # keep sources set and count in sync (PaperDTO merge‑ready)
+                        if hasattr(paper, "sources"):
+                            paper.sources.add(source)
+                            paper.sourceCount = len(paper.sources)
+                    print(f"🔍 {source} found {len(results)} papers.")
+                    all_results += results
 
         return DuplicateMergeService.merge_duplicates(all_results)

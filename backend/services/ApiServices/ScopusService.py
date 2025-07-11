@@ -46,7 +46,11 @@ class ScopusService(PaperRestService):
 
         query_string = self.build_query(search_term, filters)
 
+        # 1 Credit:
         encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=25"
+        # 2Credits:
+        # encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=200&view=COMPLETE"
+
         print(f"[DEBUG] Scopus API URL: {encoded_url}")
 
         headers = {
@@ -77,6 +81,8 @@ class ScopusService(PaperRestService):
                     abstract=result.get("dc:description", "N/A"),
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
+                    sources={"scopus"},
+                    source_count=1,
                     vhbRanking=vhbScore,
                     abdcRanking=abdcScore,
                     journal_name=journal_name,

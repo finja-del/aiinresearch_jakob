@@ -15,12 +15,15 @@ except ImportError:  # pragma: no cover
 
 class DuplicateMergeService:
     """
-    Ermittelt und verschmilzt doppelte Paper‑Einträge aus verschiedenen Quellen.
+    DuplicateMergeService – vereinheitlichtes Zusammenführen von Papern aus mehreren Quellen.
 
-    Matching‑Strategie (absteigende Priorität):
-    1. **ISSN**   – exakter String‑Vergleich oder Überschneidung mehrerer ISSN‑Einträge.
-    2. **Titel + Journal** – beide Strings exakt gleich (case‑insensitive, Whitespace getrimmt).
-    3. **Fuzzy‑Matching**  – Ähnlichkeitsmaß (RapidFuzz token_set_ratio oder difflib) >= 90 %.
+    Matching‑Strategie (Priorität absteigend)
+    1. DOI – exakter Vergleich, eindeutig.
+    2. Normalisierter Titel + Publikationsjahr.
+    3. Fuzzy‑Titelvergleich (Levenshtein ≥ 90 %) – nur wenn kein DOI vorhanden.
+
+    Beim Mergen werden die Quellen in ``paper.sources`` (Set[str]) gesammelt
+    und ``paper.source_count`` automatisch aktualisiert.
     """
 
     SIMILARITY_THRESHOLD: int = 90
@@ -30,30 +33,7 @@ class DuplicateMergeService:
         """Robustly convert None to empty string and strip/lowercase."""
         return str(text or "").strip().lower()
 
-    @classmethod
-    def _is_duplicate(cls, p1: PaperDTO, p2: PaperDTO) -> bool:
-        """Prüft, ob zwei Paper identisch sind."""
-        # 1️⃣ ISSN‑Vergleich
-        issn1_raw = getattr(p1, "issn", None)
-        issn2_raw = getattr(p2, "issn", None)
-        issn1 = {cls._normalize(i) for i in (issn1_raw or [])} if isinstance(issn1_raw, list) else {cls._normalize(issn1_raw)}
-        issn2 = {cls._normalize(i) for i in (issn2_raw or [])} if isinstance(issn2_raw, list) else {cls._normalize(issn2_raw)}
-        if issn1 & issn2 - {""}:
-            return True
 
-        title1 = cls._normalize(getattr(p1, "title", None))
-        title2 = cls._normalize(getattr(p2, "title", None))
-        journal1 = cls._normalize(getattr(p1, "journal", None))
-        journal2 = cls._normalize(getattr(p2, "journal", None))
-
-        # 2️⃣ Titel + Journal exakt
-        if title1 == title2 and journal1 == journal2 and title1:
-            return True
-
-        # 3️⃣ Fuzzy‑Matching (Titel & Journal separat, beide über Schwelle)
-        title_sim = similarity(title1, title2)
-        journal_sim = similarity(journal1, journal2)
-        return title_sim >= cls.SIMILARITY_THRESHOLD and journal_sim >= cls.SIMILARITY_THRESHOLD
 
     @staticmethod
     def _merge_sources(existing: PaperDTO, new: PaperDTO) -> None:
@@ -63,6 +43,26 @@ class DuplicateMergeService:
             new_source = new.source
             if new_source not in existing_sources.split(" and "):
                 existing.source = f"{existing_sources} and {new_source}".strip(" and ")
+        # combine sets
+        existing.sources.update(new.sources)         # type: ignore[attr-defined]
+        if not hasattr(existing, "source_count") or existing.source_count is None:
+            existing.source_count = 0                # type: ignore[attr-defined]
+        existing.source_count = len(existing.sources) # type: ignore[attr-defined]
+    @staticmethod
+    def _title_year_key(p: PaperDTO) -> str:
+        title_key = DuplicateMergeService._normalize(p.title)[:100]
+        year = (p.date or "0000")[:4]
+        return f"{title_key}-{year}"
+
+    @staticmethod
+    def _generate_key(p: PaperDTO) -> str:
+        if p.doi:
+            return (p.doi or "").strip().lower()
+        return DuplicateMergeService._title_year_key(p)
+
+    @staticmethod
+    def _fuzzy_match(a: str, b: str, threshold: float = 0.9) -> bool:
+        return similarity(a, b) >= int(threshold * 100)
 
     @classmethod
     def merge_duplicates(cls, papers: List[PaperDTO]) -> List[dict]:
@@ -75,18 +75,43 @@ class DuplicateMergeService:
         Returns:
             Liste eindeutiger Paper als Dicts für die API.
         """
-        merged: List[PaperDTO] = []
+        merged_dict: Dict[str, PaperDTO] = {}
 
         for paper in papers:
-            # Prüfe, ob dieses Paper schon in merged existiert
-            duplicate_found = False
-            for existing in merged:
-                if cls._is_duplicate(paper, existing):
-                    cls._merge_sources(existing, paper)
-                    duplicate_found = True
-                    break
+            # init sources set
+            if not getattr(paper, "sources", None):
+                paper.sources = set()           # type: ignore[attr-defined]
+            if getattr(paper, "source", None):
+                paper.sources.add(paper.source) # type: ignore[attr-defined]
 
-            if not duplicate_found:
-                merged.append(paper)
+            key = DuplicateMergeService._generate_key(paper)
 
-        return [paper.to_api_dict() for paper in merged]
+            # 1) exakter Key‑Treffer
+            if key in merged_dict:
+                DuplicateMergeService._merge_sources(merged_dict[key], paper)
+                continue
+
+            # 2) fuzzy fallback, falls kein DOI
+            if not paper.doi:
+                matched = False
+                for m_key, m_p in merged_dict.items():
+                    if not m_p.doi and DuplicateMergeService._fuzzy_match(
+                            DuplicateMergeService._normalize(m_p.title),
+                            DuplicateMergeService._normalize(paper.title)):
+                        DuplicateMergeService._merge_sources(m_p, paper)
+                        matched = True
+                        break
+                if matched:
+                    continue
+
+
+            merged_dict[key] = paper
+
+        # source_count auffüllen
+        for p in merged_dict.values():
+            if hasattr(p, "sources"):
+                p.source_count = len(p.sources)  # type: ignore[attr-defined]
+            else:
+                p.source_count = 1               # type: ignore[attr-defined]
+
+        return [p.to_api_dict() for p in merged_dict.values()]

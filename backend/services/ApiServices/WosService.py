@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from backend.services.Filterservices.WosLinkService import WosLinkService
 
 
-class WOSService(PaperRestService):
+class WosService(PaperRestService):
     def __init__(self, vhbRanking, abdcRanking):
         load_dotenv()
         self.api_key = os.getenv('WOS_API_KEY')
@@ -75,6 +75,8 @@ class WOSService(PaperRestService):
                     abstract=abstract,
                     date=str(year) if year else "1900",
                     source='WOS',
+                    sources={'wos'},
+                    source_count= 1,
                     vhbRanking=self.vhbRanking.getRanking(journal, issn),
                     abdcRanking= self.abdcRanking.getRanking(journal, issn),
                     journal_name=journal,
