@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from typing import Optional
-
+from backend.services.Deduplication.DuplicateMergeService import DuplicateMergeService
 from backend.services.Filterservices.AbdcService import AbdcService
 from backend.services.ApiServices.ScopusService import ScopusService
 from backend.services.ApiServices.OpenalexService import OpenAlexService
@@ -95,7 +95,11 @@ class SearchController:
         for apiClient in self.apiClients:
             source = apiClient.__class__.__name__.replace("Service", "")
             results = apiClient.getPaperList(searchTerm, filters)
+
+            for paper in results:
+                paper.source = source
+
             print(f"🔍 {source} found {len(results)} papers.")
             all_results += results
 
-        return [paper.to_api_dict() for paper in all_results]
+        return DuplicateMergeService.merge_duplicates(all_results)
