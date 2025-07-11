@@ -74,7 +74,7 @@ class WOSService(PaperRestService):
                     authors=authors,
                     abstract=abstract,
                     date=str(year) if year else "1900",
-                    source='WOK',
+                    source='WOS',
                     vhbRanking=self.vhbRanking.getRanking(journal, issn),
                     abdcRanking= self.abdcRanking.getRanking(journal, issn),
                     journal_name=journal,

@@ -69,8 +69,8 @@ class ScopusService(PaperRestService):
             for result in entries:
                 journal_name = result.get("prism:publicationName", "N/A")
                 issn = result.get("prism:issn", "N/A")
-                vhbScore = self.vhbRanking.getRanking(journal_name, issn)  # kann später umgebaut werden
-                abdcScore = self.abdcRanking.getRanking(journal_name, issn)  # kann später umgebaut werden
+                vhbScore = self.vhbRanking.getRanking(journal_name, issn)
+                abdcScore = self.abdcRanking.getRanking(journal_name, issn)
                 paper = PaperDTO(
                     title=result.get("dc:title", "N/A"),
                     authors=[result.get("dc:creator")] if result.get("dc:creator") else [],
