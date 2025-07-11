@@ -27,25 +27,32 @@ class DuplicateMergeService:
 
     @staticmethod
     def _normalize(text: str | None) -> str:
-        return (text or "").strip().lower()
+        """Robustly convert None to empty string and strip/lowercase."""
+        return str(text or "").strip().lower()
 
     @classmethod
     def _is_duplicate(cls, p1: PaperDTO, p2: PaperDTO) -> bool:
         """Prüft, ob zwei Paper identisch sind."""
         # 1️⃣ ISSN‑Vergleich
-        issn1 = {cls._normalize(i) for i in (p1.issn or [])} if isinstance(p1.issn, list) else {cls._normalize(p1.issn)}
-        issn2 = {cls._normalize(i) for i in (p2.issn or [])} if isinstance(p2.issn, list) else {cls._normalize(p2.issn)}
+        issn1_raw = getattr(p1, "issn", None)
+        issn2_raw = getattr(p2, "issn", None)
+        issn1 = {cls._normalize(i) for i in (issn1_raw or [])} if isinstance(issn1_raw, list) else {cls._normalize(issn1_raw)}
+        issn2 = {cls._normalize(i) for i in (issn2_raw or [])} if isinstance(issn2_raw, list) else {cls._normalize(issn2_raw)}
         if issn1 & issn2 - {""}:
             return True
 
-        # 2️⃣ Titel + Journal exakt
-        if cls._normalize(p1.title) == cls._normalize(p2.title) and \
-           cls._normalize(p1.journal) == cls._normalize(p2.journal):
+        title1 = cls._normalize(getattr(p1, "title", None))
+        title2 = cls._normalize(getattr(p2, "title", None))
+        journal1 = cls._normalize(getattr(p1, "journal", None))
+        journal2 = cls._normalize(getattr(p2, "journal", None))
+
+        # 2️⃣ Titel + Journal exakt
+        if title1 == title2 and journal1 == journal2 and title1:
             return True
 
-        # 3️⃣ Fuzzy‑Matching (Titel & Journal separat, beide über Schwelle)
-        title_sim = similarity(cls._normalize(p1.title), cls._normalize(p2.title))
-        journal_sim = similarity(cls._normalize(p1.journal), cls._normalize(p2.journal))
+        # 3️⃣ Fuzzy‑Matching (Titel & Journal separat, beide über Schwelle)
+        title_sim = similarity(title1, title2)
+        journal_sim = similarity(journal1, journal2)
         return title_sim >= cls.SIMILARITY_THRESHOLD and journal_sim >= cls.SIMILARITY_THRESHOLD
 
     @staticmethod
