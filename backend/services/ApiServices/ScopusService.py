@@ -81,7 +81,7 @@ class ScopusService(PaperRestService):
                     abstract=result.get("dc:description", "N/A"),
                     date=result.get("prism:coverDate", "1900-01-01"),
                     source="Scopus",
-                    sources={"scopus"},
+                    sources={"Scopus"},
                     source_count=1,
                     vhbRanking=vhbScore,
                     abdcRanking=abdcScore,

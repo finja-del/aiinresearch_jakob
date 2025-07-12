@@ -33,6 +33,14 @@
         <input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus
       </label>
 
+      <!-- Min. Quellen Filter -->
+        <p class="block mt-6 mb-2 text-sm font-medium">Min. sources</p>
+        <select id="minSources" class="p-2 border rounded bg-white text-sm w-full mb-4">
+          <option value="1">All</option>
+          <option value="2">≥ 2 sources</option>
+          <option value="3">≥ 3 sources</option>
+        </select>
+
       <!-- Year Chart -->
       <p class="block mb-2 text-sm font-medium">Year (click to select)</p>
       <canvas id="yearChart" height="200" class="mb-2 bg-white rounded shadow"></canvas>

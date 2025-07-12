@@ -68,7 +68,7 @@ class OpenAlexService(PaperRestService):
                     abstract=abstract,
                     date=result.get('publication_date', '1900-01-01'),
                     source='OpenAlex',
-                    sources={'openalex'},
+                    sources={'OpenAlex'},
                     source_count=1,
                     vhbRanking= self.vhbRanking.getRanking(source.get('issn_l',source.get('display_name'))),
                     abdcRanking=self.abdcRanking.getRanking(source.get('issn_l', source.get('display_name'))),
