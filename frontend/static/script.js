@@ -90,7 +90,8 @@ async function exportPapers() {
       doi: paper.doi || "",
       url: paper.url || "",
       citations: paper.citations || 0,
-      journal_quartile: paper.journal_quartile || ""
+      vhbRanking: paper.vhbRanking || "",
+      abdcRanking: paper.abdcRanking|| "",
     }));
     console.log("Exportiere folgende Daten:", papersToExport);
     const response = await axios.post("/api/export", papersToExport, {
@@ -219,10 +220,10 @@ function updateList(dataArray) {
         </div>
         <div class="flex flex-wrap gap-2 mt-2 mb-4">
           <span class="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-            VHB: ${result.journal_quartile || "N/A"}
+            VHB: ${result.vhbRanking}
           </span>
           <span class="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-            ABDC: ${result.journal_quartile || "N/A"}
+            ABDC: ${result.abdcRanking}
           </span>
           <span class="inline-block px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
             Ranking: ${result.ranking ?? "N/A"}
