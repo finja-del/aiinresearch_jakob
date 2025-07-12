@@ -3,7 +3,7 @@ console.log("📦 script.js loaded");
 // ===================================================
 // 📦 Initialisierung & Globale Variablen
 // ===================================================
-
+let selectedPapers = new Set();
 let publicationData = [];
 let yearChart;
 let selectedYear = "";
@@ -11,7 +11,7 @@ let yearRange = { from: "", to: "" };
 // Min. Quellen Filter
 let minSources = 1;    // 1 = alle, 2 = zweifach, 3 = dreifach
 let lastResults = [];  // speichert API-Ergebnisse
-
+let searchQuery = "null";
 // ===================================================
 // 🚀 Initialisierung
 // ===================================================
@@ -74,36 +74,54 @@ function renderYearChart(data) {
   });
 }
 
-// Exportieren der Chart-Daten als CSV
-async function exportPapers() {
-  try {
-    const papersToExport = publicationData.map(paper => ({
-      title: paper.title || "N/A",
-      authors: paper.authors || ["Unknown Author"],
-      abstract: paper.abstract || "",
-      date: paper.date || "",
-      source: paper.source || "",
-      quality_score: paper.quality_score || 0.0,
-      journal_name: paper.journal_name || "",
-      issn: paper.issn || "",
-      eissn: paper.eISSN || "",
-      doi: paper.doi || "",
-      url: paper.url || "",
-      citations: paper.citations || 0,
-      vhbRanking: paper.vhbRanking || "",
-      abdcRanking: paper.abdcRanking|| "",
-    }));
-    console.log("Exportiere folgende Daten:", papersToExport);
-    const response = await axios.post("/api/export", papersToExport, {
-      headers: { "Content-Type": "application/json" }
-    });
-    console.log("Export erfolgreich:", response.data);
-  } catch (error) {
-    console.error("Fehler beim Export:", error);
-    const textToSave = JSON.stringify(publicationData, null, 2);
-    saveTextAsFile("papers_export_failed_backup.txt", textToSave);
-    alert("Fehler beim Export! Die Daten wurden als Backup lokal gespeichert.");
-  }
+//Exportieren der Chart-Daten als CSV
+ async function exportPapers() {
+    if (selectedPapers.size === 0) {
+        alert("Bitte wählen mindestens ein Paper aus, um es zu exportieren.");
+        return;
+    }
+    try {
+        // Annahme: publicationData enthält die PaperDTO-Liste
+         const papersToExport = Array.from(selectedPapers).map(paper => ({
+          title: paper.title || "N/A",
+          authors: paper.authors || "Unknown Author",
+          abstract: paper.abstract || "N/A",
+          date: paper.date || "",
+          source: paper.source || "",
+          quality_score: paper.quality_score || 0.0,
+          journal_name: paper.journal_name || "N/A",
+          issn: paper.issn || "N/A",
+          eissn: paper.eISSN || "N/A",
+          doi: paper.doi || "N/A",
+          url: paper.url || "N/A",
+          citations: paper.citations || 0,
+          journal_quartile: paper.journal_quartile || ""
+      }));
+        console.log("Exportiere folgende Daten:", papersToExport);
+         const response = await axios.post("/api/download", papersToExport, {
+            headers: {
+                "Content-Type": "application/json"
+            },
+            responseType: "blob" // <--- WICHTIG: CSV als Blob empfangen
+        });
+
+         // Download im Browser triggern
+        const blob = new Blob([response.data], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = searchQuery+".csv"; // optional dynamisch
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url); // optional: Speicher freigeben
+
+        console.log("✅ Export erfolgreich heruntergeladen.");
+
+    } catch (error) {
+        console.error("❌ Fehler beim Export:", error);
+        alert("Fehler beim Export: " + error.message);
+    }
 }
 
 function toggleSelect(index, btn) {
