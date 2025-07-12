@@ -144,7 +144,7 @@ async function performSearch() {
   const searchInput = document.getElementById("searchInput")?.value?.trim() || "";
   const yearFrom = parseInt(document.getElementById("yearFrom")?.value) || 0;
   const yearTo = parseInt(document.getElementById("yearTo")?.value) || 9999;
-
+  searchQuery = [searchInput || "null", yearFrom, yearTo].join("_");
   const payload = {
     q: searchInput,
     range: { start: yearFrom, end: yearTo },
@@ -216,12 +216,12 @@ function updateList(dataArray) {
             </p>
           </div>
           <div>
-            <span class="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-              ${result.relevance_label || "high relevance"}
-            </span>
-            <span class="ml-2 inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-              ${result.quality_quartile || "Q1"}
-            </span>
+            <button 
+                class="text-sm text-gray-600 hover:text-blue-600"
+                onclick="toggleSelect(${index}, this)"
+            >
+                ◯ Select
+            </button>
           </div>
         </div>
         <p class="text-sm text-gray-700 mt-4 mb-4 line-clamp-3">
