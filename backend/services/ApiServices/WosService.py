@@ -23,22 +23,23 @@ class WOSService(PaperRestService):
 
     def query(self, search_term: str, filters) -> list[PaperDTO]:
         headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
-        
+        today = date.today()
+        formated_date = today.strftime("%Y-%m-%d")
         q = f"TS=({search_term})" # TS = Topic search in WoS
-
+    
         if filters.start_year and filters.end_year:
             q += f" AND DOP={filters.start_year}/{filters.end_year}"
         elif filters.start_year and not filters.end_year:
-            today = date.today()
-            formated_date = today.strftime("%Y-%m-%d")
+            
             q += f" AND DOP={filters.start_year}/{formated_date}"
         elif filters.end_year and not filters.start_year:
-            q += f"AND DOP=1000/{filters.end_year}"
+            q += f" AND DOP=1000/{filters.end_year}"
         
-
+       # q+= " AND limit=50"
         params = {
             'db': 'WOK',
-            'q': q
+            'q': q,
+            'limit': 50,
         }
 
         results: list[PaperDTO] = []

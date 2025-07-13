@@ -47,7 +47,7 @@ class ScopusService(PaperRestService):
         query_string = self.build_query(search_term, filters)
 
         # 1 Credit:
-        encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=25"
+        encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=50"
         # 2Credits:
         # encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=200&view=COMPLETE"
 

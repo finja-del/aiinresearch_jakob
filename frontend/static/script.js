@@ -3,7 +3,13 @@ console.log("📦 script.js loaded");
 // ===================================================
 // 📦 Initialisierung & Globale Variablen
 // ===================================================
-let selectedPapers = new Set();
+let selectedPapers = new Map();
+// zugehörige Paper-Keys generieren
+function generatePaperKey(paper) {
+  return btoa(
+    `${paper.title}|${paper.authors}|${paper.date}|${paper.source}`
+  ).substring(0, 30); // kürzt den Key etwas, optional
+}
 let publicationData = [];
 let yearChart;
 let selectedYear = "";
@@ -24,7 +30,7 @@ async function init() {
     const response = await axios.get("/api/search?q=");
     publicationData = response.data;
     renderYearChart(publicationData);
-    performSearch();
+    //performSearch();
   } catch (err) {
     console.error("Initial load failed:", err);
   }
@@ -83,7 +89,7 @@ function renderYearChart(data) {
     }
     try {
         // Annahme: publicationData enthält die PaperDTO-Liste
-         const papersToExport = Array.from(selectedPapers).map(paper => ({
+         const papersToExport = Array.from(selectedPapers.values()).map(paper => ({
           title: paper.title || "N/A",
           authors: paper.authors || "Unknown Author",
           abstract: paper.abstract || "N/A",
@@ -127,21 +133,29 @@ function renderYearChart(data) {
         alert("Fehler beim Export: " + error.message);
     }
 }
-
+//toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
-  if (!btn.classList.contains('text-green-600')) {
+  const paper = publicationData[index];
+  const paperKey = generatePaperKey(paper);
+
+  if (!selectedPapers.has(paperKey)) {
     btn.classList.add('text-green-600');
     btn.textContent = '✅ Selected';
-    selectedPapers.add(publicationData[index], index);
+    selectedPapers.set(paperKey, paper);
   } else {
     btn.classList.remove('text-green-600');
     btn.textContent = '◯ Select';
-    selectedPapers.delete(publicationData[index]);
+    selectedPapers.delete(paperKey);
   }
 }
 
 function exportPapers() {
+  if (selectedPapers.size === 0) {
+    alert("Please select at least one paper to export.");
+    return;
+  }
     document.getElementById("exportModal").classList.remove("hidden");
+    renderSelectedPapersList();
   }
 
   function closeExportModal() {
