@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from backend.services.Filterservices.WosLinkService import WosLinkService
 
 
-class WosService(PaperRestService):
+class WOSService(PaperRestService):
     def __init__(self, vhbRanking, abdcRanking):
         load_dotenv()
         self.api_key = os.getenv('WOS_API_KEY')

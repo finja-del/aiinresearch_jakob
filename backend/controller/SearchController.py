@@ -6,7 +6,7 @@ from backend.services.Filterservices.AbdcService import AbdcService
 from backend.services.ApiServices.ScopusService import ScopusService
 from backend.services.ApiServices.OpenAlexService import OpenAlexService
 from backend.services.Filterservices.VhbService import VhbService
-from backend.services.ApiServices.WosService import WosService
+from backend.services.ApiServices.WosService import WOSService
 from backend.models.PaperDTO import PaperDTO
 from backend.models.FilterCriteria import FilterCriteria, FilterCriteriaIn
 
@@ -75,7 +75,7 @@ class SearchController:
         # API-Clients initialisieren
         self.scopus = ScopusService(self.vhbRanking, self.abdcRanking)
         self.openalex = OpenAlexService(self.vhbRanking, self.abdcRanking)
-        self.wos = WosService(self.vhbRanking, self.abdcRanking)
+        self.wos = WOSService(self.vhbRanking, self.abdcRanking)
 
     def checkServices(self, filters):
         self.apiClients = []

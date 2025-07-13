@@ -12,6 +12,7 @@ let yearRange = { from: "", to: "" };
 let minSources = 1;    // 1 = alle, 2 = zweifach, 3 = dreifach
 let lastResults = [];  // speichert API-Ergebnisse
 let searchQuery = "null";
+let downloadName = searchQuery;
 // ===================================================
 // 🚀 Initialisierung
 // ===================================================
@@ -75,7 +76,7 @@ function renderYearChart(data) {
 }
 
 //Exportieren der Chart-Daten als CSV
- async function exportPapers() {
+ async function downloadPapers() {
     if (selectedPapers.size === 0) {
         alert("Bitte wählen mindestens ein Paper aus, um es zu exportieren.");
         return;

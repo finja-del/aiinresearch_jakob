@@ -130,6 +130,16 @@
       <div id="resultsContainer" class="w-full max-w-3xl space-y-4"></div>
     </main>
   </div>
+  <div id="exportModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg p-6 w-80 shadow-lg">
+    <h3 class="text-lg font-semibold mb-4">Export Filename</h3>
+    <input id="filenameInput" type="text" placeholder="e.g., research_results" class="w-full border rounded p-2 mb-4" />
+    <div class="flex justify-end gap-2">
+      <button onclick="closeExportModal()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+      <button onclick="confirmExport()" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Export</button>
+    </div>
+  </div>
+</div>
 
   <!-- SCRIPTS -->
   <script>

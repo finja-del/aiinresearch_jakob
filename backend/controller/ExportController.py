@@ -26,7 +26,7 @@ async def export_papers_endpoint(request: Request):
     writer = csv.DictWriter(
         csv_buffer,
         fieldnames=[
-            'title', 'authors', 'abstract', 'date', 'source', 'quality_score',
+            'title', 'authors', 'abstract', 'date', 'source','sources','sourceCount', 'vhbRanking', 'abdcRanking', 
             'journal_name', 'issn', 'eissn', 'doi', 'url', 'citations', 'journal_quartile'
         ],
         delimiter=';'
@@ -75,7 +75,7 @@ class ExportController:
 
         # Header aus PaperDTO Feldern
         header = [
-            'title', 'authors', 'abstract', 'date', 'source', 'quality_score',
+            'title', 'authors', 'abstract', 'date', 'source','sources','sourceCount', 'vhbRanking', 'abdcRanking', 
             'journal_name', 'issn', 'eissn', 'doi', 'url', 'citations', 'journal_quartile'
         ]
 
