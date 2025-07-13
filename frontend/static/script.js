@@ -168,6 +168,68 @@ function exportPapers() {
     downloadPapers();
     closeExportModal();
   }
+// Renderfunktion für die Paperliste
+function renderSelectedPapersList() {
+  const list = document.getElementById("selectedPapersList");
+  list.innerHTML = "";
+
+  for (const [key, paper] of selectedPapers.entries()) {
+    const li = document.createElement("li");
+    li.className = "flex justify-between items-center text-sm bg-gray-100 px-3 py-2 rounded";
+
+    li.innerHTML = `
+      <span class="truncate max-w-[200px]" title="${paper.title}">${paper.title}</span>
+      <button onclick="removePaperByKey('${key}')" class="text-red-500 hover:text-red-1000 text-sm font-bold">–</button>
+    `;
+
+    list.appendChild(li);
+  }
+}
+
+// Funktion zum Entfernen eines Papers aus der Liste
+function removePaperByKey(key) {
+  selectedPapers.delete(key);
+  renderSelectedPapersList();
+}
+
+// ===================================================
+//  Filter: VHB und ABDC Rankings
+  function vhbFilter(results){
+  const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
+    .filter(cb => cb.checked)
+    .flatMap(cb => cb.value.split("/"));
+
+  return results.filter(p => {
+    const vhbRanking = p.vhbRanking || "N/A";
+
+    // 2. Immer rausfiltern: "N/A" und "k.R."
+    if (vhbRanking === "N/A" || vhbRanking === "k.R.") return false;
+
+    // 3. Wenn keine Auswahl: alle außer "N/A" und "k.R." anzeigen
+    if (selectedRatings.length === 0) return true;
+
+    // 4. Nur anzeigen, wenn das vhbRanking zur Auswahl passt
+    return selectedRatings.includes(vhbRanking);
+  });
+}
+
+function abdcFilter(results){
+  const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
+    .filter(cb => cb.checked)
+    .flatMap(cb => cb.value.split("/")); // <– Teilt z. B. "A*/A+" in ["A*", "A+"]
+
+  return results.filter(p => {
+    const abdcRanking = p.abdcRanking || "N/A";
+
+    if (selectedRatings.length === 0) {
+      return abdcRanking !== "N/A";
+    }
+
+    return selectedRatings.includes(abdcRanking);
+  });
+}
+
+//paperkeyAbgleichen für neue suche
 
 // ===================================================
 // 🔍 Hauptsuche: Filter sammeln, API aufrufen, anzeigen
@@ -216,11 +278,18 @@ async function performSearch() {
     }
 
     lastResults = data;
-    updateList(lastResults);
-    publicationData = data;
+    if (document.getElementById("vhbCheckbox").checked){
+      lastResults = vhbFilter(lastResults);
+    }
+    if (document.getElementById("abdcCheckbox").checked){
+      lastResults = abdcFilter(lastResults);
+    }
+    
+    publicationData = lastResults;
+    updateList(publicationData);
     renderYearChart(publicationData);
   } catch (err) {
-    console.error("Search error:", err);
+    alert(error.message);
     container.innerHTML = "<p class='text-red-500'>Search failed. Please try again later.</p>";
   }
 }
