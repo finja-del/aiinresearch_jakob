@@ -89,7 +89,10 @@ function renderYearChart(data) {
           abstract: paper.abstract || "N/A",
           date: paper.date || "",
           source: paper.source || "",
-          quality_score: paper.quality_score || 0.0,
+          sources: paper.sources || [],
+          source_count: paper.source_count || 0,
+          vhbRanking: paper.vhbRanking || "N/A",
+          abdcRanking: paper.abdcRanking || "N/A",
           journal_name: paper.journal_name || "N/A",
           issn: paper.issn || "N/A",
           eissn: paper.eISSN || "N/A",
@@ -111,7 +114,7 @@ function renderYearChart(data) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = searchQuery+".csv"; // optional dynamisch
+        a.download = downloadName+".csv"; // optional dynamisch
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -137,14 +140,32 @@ function toggleSelect(index, btn) {
   }
 }
 
+function exportPapers() {
+    document.getElementById("exportModal").classList.remove("hidden");
+  }
+
+  function closeExportModal() {
+    document.getElementById("exportModal").classList.add("hidden");
+  }
+
+  function confirmExport() {
+    const filename = document.getElementById("filenameInput").value.trim();
+    downloadName = filename || searchQuery;
+    downloadPapers();
+    closeExportModal();
+  }
+
 // ===================================================
 // 🔍 Hauptsuche: Filter sammeln, API aufrufen, anzeigen
 // ===================================================
 
 async function performSearch() {
+  const heute = new Date();         //Änderung, da 9999 fehler wirft für WOS
+  const yyyy = heute.getFullYear()+1;
+
   const searchInput = document.getElementById("searchInput")?.value?.trim() || "";
   const yearFrom = parseInt(document.getElementById("yearFrom")?.value) || 0;
-  const yearTo = parseInt(document.getElementById("yearTo")?.value) || 9999;
+  const yearTo = parseInt(document.getElementById("yearTo")?.value) || yyyy; // Änderung: Jahr bis auf nächstes Jahr setzen
   searchQuery = [searchInput || "null", yearFrom, yearTo].join("_");
   const payload = {
     q: searchInput,

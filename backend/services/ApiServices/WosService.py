@@ -8,6 +8,7 @@ from backend.models.FilterCriteria import FilterCriteria
 from backend.services.ApiServices.PaperRestService import PaperRestService
 from backend.models.PaperDTO import PaperDTO
 from dotenv import load_dotenv
+from datetime import date
 
 from backend.services.Filterservices.WosLinkService import WosLinkService
 
@@ -22,24 +23,22 @@ class WOSService(PaperRestService):
 
     def query(self, search_term: str, filters) -> list[PaperDTO]:
         headers = {'X-ApiKey': self.api_key, 'Accept': 'application/json'}
+        
+        q = f"TS=({search_term})" # TS = Topic search in WoS
 
-        query_parts = [f'TI="{search_term}"']
-        # --- year filtering ---
         if filters.start_year and filters.end_year:
-            # WoS Starter API often ignores ranges; build explicit OR list instead
-            years = range(filters.start_year, filters.end_year + 1)
-            year_query = " OR ".join([f'PY=({y})' for y in years])
-            query_parts.append(f'({year_query})')
-        elif filters.start_year:
-            query_parts.append(f'PY=({filters.start_year})')
-        elif filters.end_year:
-            query_parts.append(f'PY=({filters.end_year})')
-
-        query_str = ' AND '.join(query_parts)
+            q += f" AND DOP={filters.start_year}/{filters.end_year}"
+        elif filters.start_year and not filters.end_year:
+            today = date.today()
+            formated_date = today.strftime("%Y-%m-%d")
+            q += f" AND DOP={filters.start_year}/{formated_date}"
+        elif filters.end_year and not filters.start_year:
+            q += f"AND DOP=1000/{filters.end_year}"
+        
 
         params = {
             'db': 'WOK',
-            'q': query_str
+            'q': q
         }
 
         results: list[PaperDTO] = []
