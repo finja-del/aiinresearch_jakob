@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Web of Research</title>
 
-  <!-- 🌐 Frameworks und Bibliotheken -->
+  <!-- Frameworks -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -23,17 +23,11 @@
 
       <!-- Sources -->
       <p class="block mb-2 text-sm font-medium">Sources</p>
-      <label class="block mb-1">
-        <input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex
-      </label>
-      <label class="block mb-1">
-        <input type="checkbox" class="sourceCheckbox mr-2" value="Web of Science" checked /> Web of Science
-      </label>
-      <label class="block mb-4">
-        <input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus
-      </label>
+      <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="OpenAlex" checked /> OpenAlex</label>
+      <label class="block mb-1"><input type="checkbox" class="sourceCheckbox mr-2" value="Web of Science" checked /> Web of Science</label>
+      <label class="block mb-4"><input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus</label>
 
-      <!-- Min. Quellen Filter -->
+      <!-- Min. Sources -->
       <p class="block mt-6 mb-2 text-sm font-medium">Min. sources</p>
       <select id="minSources" class="p-2 border rounded bg-white text-sm w-full mb-4">
         <option value="1">All</option>
@@ -51,82 +45,85 @@
         <input id="yearTo" type="number" class="p-2 border rounded text-sm w-[66px]" />
       </div>
 
-      <!-- Ranking Filter Section -->
-      <div class="mb-2">
-        <div class="flex">
-          <div class="w-1/2 pr-4 border-r border-gray-300">
-            <p class="block mb-2 text-sm font-medium">Journal Ranking</p>
-            <label class="block mb-1"><input id="vhbCheckbox" type="checkbox" value="vhb" /> VHB</label>
-            <label class="block mb-1"><input id="abdcCheckbox" type="checkbox" value="abdc" /> ABDC</label>
-          </div>
-          <div class="w-1/2 pl-4">
-            <p class="block mb-2 text-sm font-medium">Ranking</p>
-            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A*/A+" /> A* / A+</label>
-            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A" /> A</label>
-            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="B" /> B</label>
-            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="C" /> C</label>
-            <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="D" /> D</label>
-          </div>
-        </div>
+      <!-- Rankings -->
+<div class="mb-2">
+  <div class="flex">
+    <div class="w-1/2 pr-4 border-r border-gray-300">
+      <p class="block mb-2 text-sm font-medium flex items-center gap-1 relative group">
+        Journal Ranking
+        <span class="text-blue-600 cursor-pointer">ℹ️</span>
+        <span
+          class="absolute z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 w-52 -top-2 left-20 shadow-lg"
+        >
+          Based on the VHB and ABDC rankings from 2022
+        </span>
+      </p>
+      <label class="block mb-1"><input id="vhbCheckbox" type="checkbox" value="vhb" /> VHB</label>
+      <label class="block mb-1"><input id="abdcCheckbox" type="checkbox" value="abdc" /> ABDC</label>
+    </div>
+    <div class="w-1/2 pl-4">
+      <p class="block mb-2 text-sm font-medium">Rating</p>
+      <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A*/A+" /> A* / A+</label>
+      <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A" /> A</label>
+      <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="B" /> B</label>
+      <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="C" /> C</label>
+      <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="D" /> D</label>
+    </div>
+  </div>
 
-        <!-- Select/Deselect Buttons -->
-        <div class="flex gap-2 mt-4 mb-2">
-          <button onclick="selectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
-            Select All
-          </button>
-          <button onclick="deselectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
-            Deselect All
-          </button>
-        </div>
-      </div>
+  <!-- Select/Deselect -->
+  <div class="flex gap-2 mt-4 mb-2">
+    <button onclick="selectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
+      Select All
+    </button>
+    <button onclick="deselectAllRatings()" class="flex-1 text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300">
+      Deselect All
+    </button>
+  </div>
+</div>
+
 
       <!-- Apply Filters -->
-      <button onclick="performSearch()" class="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+      <button onclick="performSearch()" class="w-full mt-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
         Apply Filters
       </button>
     </aside>
 
     <!-- MAIN -->
     <main class="flex-grow flex flex-col items-center justify-start p-8 relative">
-      <!-- Suchfeld, Sortierung & Buttons auf einer Linie -->
-      <div class="w-full max-w-3xl mb-6">
-        <div class="flex gap-2 items-center flex-wrap sm:flex-nowrap">
-          <!-- Suchfeld -->
+      <!-- Suchzeile -->
+      <div class="w-full max-w-2xl mb-6">
+        <div class="flex flex-wrap gap-2 items-center">
           <input
             id="searchInput"
             type="text"
             placeholder="Enter search term..."
             class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-500"
           />
-
-          <!-- Sortierfeld -->
           <select
             id="sortOption"
-            class="p-3 border border-gray-300 rounded-lg bg-white text-sm w-36"
+            class="p-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none w-36"
           >
             <option value="">Sort</option>
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
           </select>
-
-          <!-- Buttons -->
           <button
             onclick="performSearch()"
             class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 whitespace-nowrap"
           >
             Search
           </button>
-
           <button
             onclick="exportPapers()"
-            class="bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 whitespace-nowrap"
+            class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 whitespace-nowrap"
           >
             Export
           </button>
         </div>
       </div>
 
-      <!-- Ergebniscontainer -->
+      <!-- Results -->
       <div id="resultsContainer" class="w-full max-w-3xl space-y-4"></div>
     </main>
   </div>
