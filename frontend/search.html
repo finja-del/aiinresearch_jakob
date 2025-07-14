@@ -22,6 +22,14 @@
     align-items: center;
   }
 </style>
+  <style>
+    .badge-vhb-aplus { background-color: #ede9fecc !important; color: #7c3aed !important; }  /* A*, A+ → violett */
+    .badge-vhb-a     { background-color: #bbf7d0cc !important; color: #166534 !important; }  /* A → grün */
+    .badge-vhb-b     { background-color: #dbeafecc !important; color: #2563eb !important; }  /* B → blau */
+    .badge-vhb-c     { background-color: #fef3c7cc !important; color: #b45309 !important; }  /* C → orange */
+    .badge-vhb-d     { background-color: #fecacacc !important; color: #991b1bcc !important; }    /* D → rot */
+    .badge-vhb-na    { background-color: #f3f4f6cc !important; color: #374151 !important; }      /* N/A → grau */
+  </style>
 
 </head>
 
@@ -166,6 +174,27 @@
             <p id="duplicates" class="text-3xl font-bold text-gray-900">—</p>
           </div>
         </div>
+      </div>
+
+      <div id="introLegend"
+           class="p-6 my-6 bg-blue-50 border border-blue-200 rounded-xl shadow w-full max-w-3xl mx-auto">
+        <h3 class="text-lg font-bold text-blue-900 mb-3">How to use this Application</h3>
+        <div class="mb-4">
+          <span class="inline-block px-2 py-1 text-xs rounded-full badge-vhb-aplus mr-2">A* / A+</span>
+          <span class="inline-block px-2 py-1 text-xs rounded-full badge-vhb-a mr-2">A</span>
+          <span class="inline-block px-2 py-1 text-xs rounded-full badge-vhb-b mr-2">B</span>
+          <span class="inline-block px-2 py-1 text-xs rounded-full badge-vhb-c mr-2">C</span>
+          <span class="inline-block px-2 py-1 text-xs rounded-full badge-vhb-d mr-2">D</span>
+          <span class="inline-block px-2 py-1 text-xs rounded-full badge-vhb-na">N/A</span>
+        </div>
+        <p class="text-gray-700 text-sm mb-1">
+          <strong>Ranking colors:</strong> Each badge color shows the VHB or ABDC journal rating. Use the <strong>filters</strong>
+          on the left to narrow your results by rating, source or year.
+        </p>
+        <p class="text-gray-700 text-sm">
+          <strong>Tip:</strong> Click "Search" to start. Select papers to export or explore more info for each
+          publication.
+        </p>
       </div>
 
             
