@@ -312,7 +312,7 @@ function abdcFilter(results){
 function getDuplicates() {
   duplicates = 0;
   dummy = publicationData.map(paper => {
-    if(paper.souerce_count >1){
+    if(paper.source_count >1){
       duplicates += 1;
     }})
   console.log("Anzahl der Duplikate:", duplicates);
