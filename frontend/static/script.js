@@ -351,10 +351,18 @@ async function performSearch() {
     }
 
     const sortOption = document.getElementById("sortOption")?.value;
+const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
+
     if (sortOption === "newest") {
       data.sort((a, b) => new Date(b.date) - new Date(a.date));
     } else if (sortOption === "oldest") {
       data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (sortOption === "combined-ranking") {
+      data.sort((a, b) => {
+        const rankA = rankingOrder.indexOf(a.vhbRanking || a.abdcRanking || "N/A");
+        const rankB = rankingOrder.indexOf(b.vhbRanking || b.abdcRanking || "N/A");
+        return rankA - rankB;
+      });
     }
 
     lastResults = data;
