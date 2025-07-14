@@ -6,9 +6,9 @@ console.log("📦 script.js loaded");
 let selectedPapers = new Map();
 // zugehörige Paper-Keys generieren
 function generatePaperKey(paper) {
-  return btoa(
-    `${paper.title}|${paper.authors}|${paper.date}|${paper.source}`
-  ).substring(0, 30); // kürzt den Key etwas, optional
+  const rawString = `${paper.title}|${paper.authors}|${paper.date}|${paper.source}`;
+  const utf8Safe = unescape(encodeURIComponent(rawString)); // UTF-8 → Latin1-kompatibel
+  return btoa(utf8Safe).substring(0, 30);
 }
 let publicationData = [];
 let yearChart;
@@ -116,11 +116,11 @@ function renderYearChart(data) {
         });
 
          // Download im Browser triggern
-        const blob = new Blob([response.data], { type: "text/csv" });
+        const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = downloadName+".csv"; // optional dynamisch
+        a.download = downloadName+".xlsx"; // optional dynamisch
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -142,10 +142,12 @@ function toggleSelect(index, btn) {
     btn.classList.add('text-green-600');
     btn.textContent = '✅ Selected';
     selectedPapers.set(paperKey, paper);
+    renderSelectedPapersSidebar();
   } else {
     btn.classList.remove('text-green-600');
     btn.textContent = '◯ Select';
     selectedPapers.delete(paperKey);
+    renderSelectedPapersSidebar();
   }
 }
 
@@ -156,6 +158,7 @@ function exportPapers() {
   }
     document.getElementById("exportModal").classList.remove("hidden");
     renderSelectedPapersList();
+    renderSelectedPapersSidebar();
   }
 
   function closeExportModal() {
@@ -186,10 +189,30 @@ function renderSelectedPapersList() {
   }
 }
 
+
+//Sidebar-Funktion: Rendern der ausgewählten Papers in der Seitenleiste
+function renderSelectedPapersSidebar() {
+  const list = document.getElementById("selectedPapersSidebarList");
+  list.innerHTML = "";
+
+  for (const [key, paper] of selectedPapers.entries()) {
+    const li = document.createElement("li");
+    li.className = "flex justify-between items-center text-sm bg-gray-100 px-3 py-2 rounded";
+
+    li.innerHTML = `
+      <span class="truncate max-w-[160px]" title="${paper.title}">${paper.title}</span>
+      <button onclick="removePaperByKey('${key}')" class="text-red-500 hover:text-red-700 text-sm font-bold">–</button>
+    `;
+
+    list.appendChild(li);
+  }
+}
+
 // Funktion zum Entfernen eines Papers aus der Liste
 function removePaperByKey(key) {
   selectedPapers.delete(key);
   renderSelectedPapersList();
+  renderSelectedPapersSidebar();
 }
 
 // ===================================================
