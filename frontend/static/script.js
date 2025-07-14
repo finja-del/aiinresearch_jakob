@@ -1,6 +1,37 @@
 console.log("📦 script.js loaded");
 
 // ===================================================
+// 🎨 Ranking Color Helper
+// ===================================================
+function getRankingColor(ranking) {
+  if (ranking === "A*" || ranking === "A+") {
+    return "bg-purple-100 text-purple-800";
+  }
+  if (ranking === "A") {
+    return "bg-green-200 text-green-900";
+  }
+  if (ranking === "B") {
+    return "bg-green-100 text-green-800";
+  }
+  if (ranking === "C") {
+    return "bg-orange-200 text-orange-800";
+  }
+  if (ranking === "D") {
+    return "bg-red-200 text-red-800";
+  }
+  return "bg-gray-100 text-gray-800";
+}
+
+function getRankingClass(ranking) {
+  if (ranking === "A*" || ranking === "A+") return "badge-vhb-aplus";
+  if (ranking === "A") return "badge-vhb-a";
+  if (ranking === "B") return "badge-vhb-b";
+  if (ranking === "C") return "badge-vhb-c";
+  if (ranking === "D") return "badge-vhb-d";
+  return "badge-vhb-na";
+}
+
+// ===================================================
 // 📦 Initialisierung & Globale Variablen
 // ===================================================
 let selectedPapers = new Map();
@@ -19,6 +50,32 @@ let minSources = 1;    // 1 = alle, 2 = zweifach, 3 = dreifach
 let lastResults = [];  // speichert API-Ergebnisse
 let searchQuery = "null";
 let downloadName = searchQuery;
+
+// ===================================================
+// 🧹 Helper: Reset Dashboard/results state
+// ===================================================
+function resetDashboard() {
+  // clear previously stored data
+  publicationData = [];
+  selectedPapers.clear();
+
+  // clear results on screen
+  const container = document.getElementById("resultsContainer");
+  if (container) container.innerHTML = "";
+
+  // hide or reset KPI dashboard
+  const dash = document.getElementById("kpi-dashboard");
+  if (dash) dash.style.display = "none";
+
+  // reset KPI numbers
+  document.getElementById("total-papers").textContent = "0";
+  document.getElementById("duplicates").textContent   = "0";
+  document.getElementById("a-ranked").textContent     = "0";
+  document.getElementById("sources").innerHTML        = "";
+
+  // reset year chart
+  if (yearChart) { yearChart.destroy(); yearChart = null; }
+}
 // ===================================================
 // 🚀 Initialisierung
 // ===================================================
@@ -316,10 +373,21 @@ function getcountOpenAlex(){
 // ===================================================
 
 async function performSearch() {
+  // --- Clear previous results & dashboard ---
+  resetDashboard();
+
+  // Wenn kein Suchbegriff eingegeben → Intro-Legende anzeigen und abbrechen
+  const rawQuery = document.getElementById("searchInput")?.value?.trim() || "";
+  if (rawQuery === "") {
+    const legendEl = document.getElementById("introLegend");
+    if (legendEl) legendEl.style.display = "block";
+    return;     // keine API-Abfrage, altes Dashboard bleibt gelöscht
+  }
+
   const heute = new Date();         //Änderung, da 9999 fehler wirft für WOS
   const yyyy = heute.getFullYear()+1;
 
-  const searchInput = document.getElementById("searchInput")?.value?.trim() || "";
+  const searchInput = rawQuery;
   const yearFrom = parseInt(document.getElementById("yearFrom")?.value) || 0;
   const yearTo = parseInt(document.getElementById("yearTo")?.value) || yyyy; // Änderung: Jahr bis auf nächstes Jahr setzen
   searchQuery = [searchInput || "null", yearFrom, yearTo].join("_");
@@ -342,14 +410,24 @@ async function performSearch() {
   container.innerHTML = "<p class='text-gray-600'>Loading...</p>";
 
   try {
-    const response = await axios.post("/api/search", payload);
+    // 1️⃣  API‑Request
+    const response = await axios.post("/api/search", payload, {
+      headers: { "Content-Type": "application/json" }
+    });
     const data = response.data;
 
+    // Legende ein-/ausblenden je nach Trefferzahl
+    const legendEl = document.getElementById("introLegend");
+
     if (!Array.isArray(data) || data.length === 0) {
-      container.innerHTML = "<p class='text-gray-500 text-center'>No results found.</p>";
+      resetDashboard();
+      renderDashboard();
+      if (legendEl) legendEl.style.display = "block";
       return;
     }
 
+// es gibt Ergebnisse → Legende ausblenden
+if (legendEl) legendEl.style.display = "none";
     const sortOption = document.getElementById("sortOption")?.value;
 const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
 
@@ -372,7 +450,7 @@ const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
     if (document.getElementById("abdcCheckbox").checked){
       lastResults = abdcFilter(lastResults);
     }
-    
+
     publicationData = lastResults;
     updateList(publicationData);
     renderYearChart(publicationData);
@@ -431,11 +509,11 @@ function updateList(dataArray) {
           </p>
         </div>
         <div class="flex flex-wrap gap-2 mt-2 mb-4">
-          <span class="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-            VHB: ${result.vhbRanking}
+          <span class="inline-block px-2 py-1 text-xs rounded-full ${getRankingClass(result.vhbRanking)}">
+            VHB: ${result.vhbRanking || "N/A"}
           </span>
-          <span class="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-            ABDC: ${result.abdcRanking}
+          <span class="inline-block px-2 py-1 text-xs rounded-full ${getRankingClass(result.abdcRanking)}">
+            ABDC: ${result.abdcRanking || "N/A"}
           </span>
         </div>
         <div class="flex flex-wrap gap-2 mb-4">
@@ -449,7 +527,6 @@ function updateList(dataArray) {
             <strong>ISSN:</strong> ${result.issn || "N/A"}<br>
             <strong>eISSN:</strong> ${result.eISSN || "N/A"}<br>
             <strong>DOI:</strong> ${result.doi ? `<a href="${result.doi}" target="_blank" class="text-blue-600 underline">${result.doi}</a>` : "N/A"}<br>
-            <strong>Date:</strong> ${result.date || "N/A"}
           </p>
         </div>
         <div class="flex justify-between items-center pt-2 border-t border-gray-200 mt-2">
