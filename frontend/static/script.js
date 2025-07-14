@@ -298,7 +298,7 @@ function renderDashboard() {
   const sourcesList = {WOS: getcountWOS(), Scopus: getcountScopus(), OpenAlex: getcountOpenAlex()};
   const sourcesEntries = Object.entries(sourcesList)
     .map(([key, value]) => `${key}: ${value}`)
-  document.getElementById("sources").textContent = sourcesEntries.join(", ") || "No sources found";
+  document.getElementById("sources").innerHTML = sourcesEntries.map(e => `<div>${e}</div>`).join("") || "No sources found";
 }
 
 function getcountWOS(){
@@ -429,9 +429,6 @@ function updateList(dataArray) {
           <span class="inline-block px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
             ABDC: ${result.abdcRanking}
           </span>
-          <span class="inline-block px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
-            Ranking: ${result.ranking ?? "N/A"}
-          </span>
         </div>
         <div class="flex flex-wrap gap-2 mb-4">
           ${(result.tags || []).map(tag => `
@@ -449,9 +446,6 @@ function updateList(dataArray) {
         </div>
         <div class="flex justify-between items-center pt-2 border-t border-gray-200 mt-2">
           <div class="flex gap-2">
-            <button class="text-sm text-gray-600 hover:text-blue-600">💾 Save</button>
-            <button class="text-sm text-gray-600 hover:text-blue-600">▶️ Export</button>
-            <button class="text-sm text-gray-600 hover:text-blue-600">🏷️ Tag</button>
             <button 
               onclick="document.getElementById('${extraId}').classList.toggle('hidden')" 
               class="text-sm text-gray-600 hover:text-blue-600"
@@ -483,3 +477,6 @@ document.getElementById("applyFilter")?.addEventListener("click", () => {
     updateList(lastResults);
   }
 });
+
+
+

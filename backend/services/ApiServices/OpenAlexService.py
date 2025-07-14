@@ -17,7 +17,7 @@ class OpenAlexService(PaperRestService):
     def query(self, search_term: str, filter_criteria: Optional[FilterCriteria] = None) -> List[PaperDTO]:
         params = {
             'search': search_term,
-            'per-page': '25',
+            'per-page': '200',
         }
 
         # Baue Filter ein (Publikationsjahre, Sprache, Autor)
