@@ -229,7 +229,64 @@ function abdcFilter(results){
   });
 }
 
-//paperkeyAbgleichen für neue suche
+function getDuplicates() {
+  duplicates = 0;
+  dummy = publicationData.map(paper => {
+    if(paper.souerce_count >1){
+      duplicates += 1;
+    }})
+  console.log("Anzahl der Duplikate:", duplicates);
+  return duplicates
+}
+
+//KPI Dashboard
+function renderDashboard() {
+  kpi = {
+    total_papers: publicationData.length,
+    duplicates: getDuplicates(),
+    a_ranked: publicationData.filter(p => p.vhbRanking === "A" || p.abdcRanking === "A" || p.vhbRanking === "A+" || p.abdcRanking ==="A*").length,
+  }
+  console.log("📊 KPI-Dashboard wird gerendert:", kpi);
+
+  const dashboardEl = document.getElementById("kpi-dashboard");
+  if (!dashboardEl) return;
+
+  // Zeige Dashboard an
+  dashboardEl.style.display = "block";
+
+
+  // Fülle die KPI-Werte ein
+  document.getElementById("total-papers").textContent = kpi.total_papers ?? "0";
+  document.getElementById("duplicates").textContent = kpi.duplicates || "0";
+  document.getElementById("a-ranked").textContent = kpi.a_ranked ?? "0";
+
+  // Quellen korrekt zählen
+  const sourceCounts = {};
+  publicationData.forEach(paper => {
+    let sources = paper.sources ?? []; // Prüfe plural sources
+    if (!Array.isArray(sources) || sources.length === 0) {
+      sources = [paper.source ?? "Unknown"];
+    }
+    sources.forEach(src => {
+      sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+    });
+  });
+    // Formatierte Liste der Datenbanken
+  const sourcesList = {WOS: getcountWOS(), Scopus: getcountScopus(), OpenAlex: getcountOpenAlex()};
+  const sourcesEntries = Object.entries(sourcesList)
+    .map(([key, value]) => `${key}: ${value}`)
+  document.getElementById("sources").textContent = sourcesEntries.join(", ") || "No sources found";
+}
+
+function getcountWOS(){
+  return publicationData.filter(p => p.source === "WOS").length;
+}
+function getcountScopus(){
+  return publicationData.filter(p => p.source === "Scopus").length;
+}
+function getcountOpenAlex(){
+  return publicationData.filter(p => p.source === "OpenAlex").length;
+}
 
 // ===================================================
 // 🔍 Hauptsuche: Filter sammeln, API aufrufen, anzeigen
@@ -288,6 +345,7 @@ async function performSearch() {
     publicationData = lastResults;
     updateList(publicationData);
     renderYearChart(publicationData);
+    renderDashboard();
   } catch (err) {
     alert(error.message);
     container.innerHTML = "<p class='text-red-500'>Search failed. Please try again later.</p>";
