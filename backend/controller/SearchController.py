@@ -45,24 +45,23 @@ def search_route(
 # 🔹 API route for POST requests
 @router.post("/search")
 def search_post(filters: FilterCriteriaIn):
+    if not filters.q or not filters.q.strip():
+        return {"error": "Suchbegriff darf nicht leer sein."}
+
     sources = [s.lower() for s in filters.source or []]
 
     filter_criteria = FilterCriteria(
         scopus="scopus" in sources,
         wos="web of science" in sources,
         openalex="openalex" in sources,
-        # language=filters.language,
-        # author=filters.author,
         start_year=filters.range.start if filters.range else None,
         end_year=filters.range.end if filters.range else None,
         ranking=filters.ranking,
         rating=filters.rating
-
     )
 
     controller = SearchController()
     return controller.searchPapers(filters.q, filter_criteria)
-
 # 🔹 SearchController class
 class SearchController:
 
