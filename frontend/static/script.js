@@ -274,6 +274,20 @@ function removePaperByKey(key) {
 
 // ===================================================
 //  Filter: VHB und ABDC Rankings
+function filterABCD(results){
+  const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
+    .filter(cb => cb.checked)
+    .flatMap(cb => cb.value.split("/"));
+  return results.filter(p => {
+    const abdcRanking = p.abdcRanking || "N/A";
+    const vhbRanking = p.vhbRanking || "N/A";
+    if (vhbRanking === "N/A" || vhbRanking === "k.R." && abdcRanking === "N/A") return false;
+    if (selectedRatings.length === 0) return true;
+    return (selectedRatings.includes(abdcRanking) || selectedRatings.includes(vhbRanking));
+})
+}
+
+
   function vhbFilter(results){
   const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
     .filter(cb => cb.checked)
@@ -444,6 +458,14 @@ const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
     }
 
     lastResults = data;
+
+    const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
+    .filter(cb => cb.checked)
+    .flatMap(cb => cb.value.split("/")); 
+    if (selectedRatings.length > 0) {
+      lastResults = filterABCD(lastResults);
+    }
+
     if (document.getElementById("vhbCheckbox").checked){
       lastResults = vhbFilter(lastResults);
     }
