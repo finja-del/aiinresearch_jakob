@@ -212,6 +212,59 @@ function findMissingEntries(array, controlArray) {
     }
 }
 
+function toggleSelectAll() {
+  const container = document.getElementById("resultsContainer");
+  if (!container) return;
+
+  const cards = container.querySelectorAll(".bg-white.border"); // jedes Paper-Div
+  if (cards.length !== publicationData.length) {
+    console.warn("Anzahl der Cards und lastResults stimmt nicht überein.");
+  }
+  console.log("AllSelected:", allSelected);
+  if (!allSelected) {
+    // Alle Paper hinzufügen
+    publicationData.forEach((paper, index) => {
+      const key = generatePaperKey(paper);
+      selectedPapers.set(key, paper);
+
+      const card = cards[index];
+      if (card) {
+        const btn = document.getElementById(`selectBtn-${index}`);
+        if(btn) {
+          btn.classList.add('text-green-600');
+          btn.textContent = "✅\nSelected";
+        }
+      }
+    });
+  } else {
+    // Alle Paper entfernen
+    publicationData.forEach((paper, index) => {
+      const key = generatePaperKey(paper);
+      selectedPapers.delete(key);
+
+      const card = cards[index];
+      if (card) {
+        
+        const btn = document.getElementById(`selectBtn-${index}`);
+        if(btn) {
+          btn.classList.remove('text-green-600');
+          btn.textContent = "◯\nSelect";
+        }
+      }
+    });
+  }
+
+  // Button-Text aktualisieren
+  const btn = document.getElementById("toggleSelectAllBtn");
+  btn.textContent = allSelected ? "Select All" : "Deselect All";
+
+  allSelected = !allSelected;
+
+  console.log("Aktuell ausgewählte Paper:", selectedPapers);
+  renderSelectedPapersSidebar();
+  renderSelectedPapersList();
+}
+
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
   const paper = publicationData[index];
