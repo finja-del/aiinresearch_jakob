@@ -57,7 +57,6 @@ let allSelected = false;
 function resetDashboard() {
   // clear previously stored data
   publicationData = [];
-  selectedPapers.clear();
 
   // clear results on screen
   const container = document.getElementById("resultsContainer");
@@ -263,8 +262,14 @@ function toggleSelectAll() {
   console.log("Aktuell ausgewählte Paper:", selectedPapers);
   renderSelectedPapersSidebar();
   renderSelectedPapersList();
+  renderSelectedButton();
 }
+function renderSelAllButton(){
+  const btn = document.getElementById("toggleSelectAllBtn");
+  btn.textContent = allSelected ? "Select All" : "Deselect All";
 
+  allSelected = !allSelected;
+}
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
   const paper = publicationData[index];
@@ -275,11 +280,17 @@ function toggleSelect(index, btn) {
     btn.textContent = '✅\n Selected';
     selectedPapers.set(paperKey, paper);
     renderSelectedPapersSidebar();
+    allSelected = false;
+    renderSelAllButton();
   } else {
     btn.classList.remove('text-green-600');
     btn.textContent = '◯\n Select';
     selectedPapers.delete(paperKey);
+    if(selectedPapers.length === 0){
+      allSelected = true;
+    }
     renderSelectedPapersSidebar();
+    renderSelAllButton();
   }
 }
 
@@ -321,6 +332,23 @@ function renderSelectedPapersList() {
   }
 }
 
+function renderSelectedButton(){
+   publicationData.forEach((paper, index) => {
+    const key = generatePaperKey(paper);
+    const btn = document.getElementById(`selectBtn-${index}`);
+
+    if (!btn) return;
+
+    if (selectedPapers.has(key)) {
+      btn.classList.add("text-green-600");
+      btn.textContent = "✅\nSelected";
+    } else {
+      btn.classList.remove("text-green-600");
+      btn.textContent = "◯\nSelect";
+    }
+  });
+}
+
 // ===================================================
 //Export-Filterfunktion
 function toggleOptions() {
@@ -356,6 +384,7 @@ function removePaperByKey(key) {
   selectedPapers.delete(key);
   renderSelectedPapersList();
   renderSelectedPapersSidebar();
+  renderSelectedButton();
 }
 
 // ===================================================
@@ -585,8 +614,10 @@ const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
     updateList(publicationData);
     renderYearChart(publicationData);
     renderDashboard();
+    allSelected = true;
+    renderSelAllButton();
   } catch (err) {
-    alert(error.message);
+    alert(err.message);
     container.innerHTML = "<p class='text-red-500'>Search failed. Please try again later.</p>";
   }
 }
