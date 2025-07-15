@@ -382,9 +382,13 @@ function renderSelectedPapersSidebar() {
 // Funktion zum Entfernen eines Papers aus der Liste
 function removePaperByKey(key) {
   selectedPapers.delete(key);
+  if(selectedPapers.length === 0){
+    allSelected = true;
+  }
   renderSelectedPapersList();
   renderSelectedPapersSidebar();
   renderSelectedButton();
+  renderSelAllButton();
 }
 
 // ===================================================
