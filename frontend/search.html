@@ -106,7 +106,7 @@
 
 
       <!-- Apply Filters -->
-      <button onclick="performSearch()" class="w-full mt-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+      <button onclick="applyFilters()" class="w-full mt-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
         Apply Filters
       </button>
     </aside>
@@ -204,8 +204,54 @@
     </main>
     <aside id="selectedSidebar"
            class="w-72 bg-white shadow px-4 py-6 border-l border-gray-200 sticky top-0 self-start h-screen overflow-y-auto">
-      <h2 class="font-semibold text-lg mb-4">Selected Papers</h2>
-      <ul id="selectedPapersSidebarList" class="space-y-2 text-sm"></ul>
+
+      <!-- Modus-Schalter: Online vs. Offline -->
+      <div class="flex justify-center mb-6">
+        <button id="modeOnlineBtn"
+                class="px-4 py-2 mr-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                style="opacity:1">
+          Online
+        </button>
+        <button id="modeOfflineBtn"
+                class="px-4 py-2 rounded-lg bg-gray-200 text-blue-800 font-semibold hover:bg-blue-300 transition"
+                style="opacity:0.7">
+          Upload
+        </button>
+      </div>
+
+      <!-- 2. Selected Papers -->
+      <div class="mb-10">
+        <h2 class="font-semibold text-lg mb-2 text-gray-700 flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2z"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Selected Papers
+        </h2>
+        <ul id="selectedPapersSidebarList" class="space-y-2 text-sm"></ul>
+      </div>
+
+      <!-- 3. Upload List -->
+      <!-- Upload List im gleichen Stil wie Selected Papers -->
+      <div class="mb-8">
+        <h2 class="font-semibold text-lg mb-2 text-gray-700 flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M12 16V4m0 12l-4-4m4 4l4-4M4 20h16"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Upload List
+        </h2>
+        <div id="dropzone"
+             class="flex flex-col items-center justify-center w-full h-[90px] border-4 border-dashed border-blue-400 rounded-2xl bg-blue-50 bg-opacity-80 transition-all hover:bg-blue-100 cursor-pointer shadow-md select-none">
+          <input id="uploadInput" type="file" accept=".xlsx,.csv" class="hidden"/>
+          <div class="flex flex-col items-center justify-center h-full w-full">
+            <!-- Pfeil-Icon -->
+            <span class="text-base text-blue-900 font-medium text-center">
+        Drag &amp; Drop<br>(csv / xlsx)
+      </span>
+          </div>
+        </div>
+      </div>
     </aside>
   </div>
 

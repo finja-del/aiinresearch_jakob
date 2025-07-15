@@ -47,9 +47,9 @@ class ScopusService(PaperRestService):
         query_string = self.build_query(search_term, filters)
 
         # 1 Credit:
-        encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=25"
+        #encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=200"
         # 2Credits:
-        # encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=200&view=COMPLETE"
+        encoded_url = f"{self.base_url}?query={quote_plus(query_string)}&count=25"
 
         print(f"[DEBUG] Scopus API URL: {encoded_url}")
 
@@ -93,10 +93,10 @@ class ScopusService(PaperRestService):
                     citations=int(result.get("citedby-count", 0))
                 )
 
-                if paper.vhbRanking != "N/A":
-                    print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | VHB-Ranking: {vhbScore}")
-                if paper.abdcRanking != "N/A":
-                    print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | ABDC-Ranking: {abdcScore}")
+                #if paper.vhbRanking != "N/A":
+                 #   print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | VHB-Ranking: {vhbScore}")
+                #if paper.abdcRanking != "N/A":
+                 #   print(f"[DEBUG] Paper: {paper.title} | Journal: {journal_name} | ISSN: {issn} | ABDC-Ranking: {abdcScore}")
 
                 results.append(paper)
 

@@ -42,9 +42,86 @@ function generatePaperKey(paper) {
   return btoa(utf8Safe).substring(0, 30);
 }
 let publicationData = [];
+let isOfflineMode = false;
 let yearChart;
 let selectedYear = "";
 let yearRange = { from: "", to: "" };
+
+// === Mode-Switch Buttons und UI ===
+const modeOnlineBtn = document.getElementById("modeOnlineBtn");
+const modeOfflineBtn = document.getElementById("modeOfflineBtn");
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.querySelector('button[onclick="performSearch()"]');
+const processBtn = document.getElementById("processUploadBtn");
+
+function updateModeUI() {
+  if (isOfflineMode) {
+    if (searchBtn) {
+      searchBtn.disabled = true;
+      searchBtn.classList.add("opacity-60", "pointer-events-none");
+    }
+    if (searchInput) searchInput.disabled = true;
+    if (processBtn) {
+      processBtn.disabled = false;
+      processBtn.classList.remove("opacity-60", "pointer-events-none");
+    }
+  } else {
+    if (searchBtn) {
+      searchBtn.disabled = false;
+      searchBtn.classList.remove("opacity-60", "pointer-events-none");
+    }
+    if (searchInput) searchInput.disabled = false;
+    if (processBtn) {
+      processBtn.disabled = true;
+      processBtn.classList.add("opacity-60", "pointer-events-none");
+    }
+  }
+}
+
+if (modeOnlineBtn && modeOfflineBtn) {
+
+  modeOnlineBtn.addEventListener("click", function () {
+    if (!isOfflineMode) return;
+    resetDashboard();
+    publicationData = [];
+    selectedPapers.clear();
+    isOfflineMode = false;
+    modeOnlineBtn.classList.add("bg-blue-600", "text-white");
+    modeOnlineBtn.classList.remove("bg-gray-200", "text-blue-800");
+    modeOnlineBtn.style.opacity = 1;
+    modeOfflineBtn.classList.remove("bg-blue-600", "text-white");
+    modeOfflineBtn.classList.add("bg-gray-200", "text-blue-800");
+    modeOfflineBtn.style.opacity = 0.7;
+    updateModeUI();
+    // NEU: Start-Info (Intro-Legende) anzeigen
+    const legendEl = document.getElementById("introLegend");
+    if (legendEl) legendEl.style.display = "block";
+    // KEINE Suche mehr machen!
+  });
+  }
+
+ modeOfflineBtn.addEventListener("click", function () {
+  if (isOfflineMode) return;
+  resetDashboard();
+  publicationData = [];
+  selectedPapers.clear();
+  isOfflineMode = true;
+  modeOfflineBtn.classList.add("bg-blue-600", "text-white");
+  modeOfflineBtn.classList.remove("bg-gray-200", "text-blue-800");
+  modeOfflineBtn.style.opacity = 1;
+  modeOnlineBtn.classList.remove("bg-blue-600", "text-white");
+  modeOnlineBtn.classList.add("bg-gray-200", "text-blue-800");
+  modeOnlineBtn.style.opacity = 0.7;
+  updateModeUI();
+  // HIER: Application Info immer zeigen, solange keine Ergebnisse da sind!
+  const legendEl = document.getElementById("introLegend");
+  if (legendEl) legendEl.style.display = "block";
+  document.getElementById("uploadInput")?.focus();
+});
+
+
+updateModeUI();
+
 // Min. Quellen Filter
 let minSources = 1;    // 1 = alle, 2 = zweifach, 3 = dreifach
 let lastResults = [];  // speichert API-Ergebnisse
@@ -55,26 +132,24 @@ let downloadName = searchQuery;
 // 🧹 Helper: Reset Dashboard/results state
 // ===================================================
 function resetDashboard() {
-  // clear previously stored data
   publicationData = [];
   selectedPapers.clear();
 
-  // clear results on screen
   const container = document.getElementById("resultsContainer");
   if (container) container.innerHTML = "";
 
-  // hide or reset KPI dashboard
   const dash = document.getElementById("kpi-dashboard");
-  if (dash) dash.style.display = "none";
+  if (dash) dash.style.display = "block";
 
-  // reset KPI numbers
-  document.getElementById("total-papers").textContent = "0";
-  document.getElementById("duplicates").textContent   = "0";
-  document.getElementById("a-ranked").textContent     = "0";
-  document.getElementById("sources").innerHTML        = "";
+  // Striche als Platzhalter!
+  document.getElementById("total-papers").textContent = "—";
+  document.getElementById("duplicates").textContent   = "—";
+  document.getElementById("a-ranked").textContent     = "—";
+  document.getElementById("sources").innerHTML        = "—";
 
-  // reset year chart
+  // Chart auf leer rendern!
   if (yearChart) { yearChart.destroy(); yearChart = null; }
+  renderYearChart([]); // <--- LEERER CHART!
 }
 // ===================================================
 // 🚀 Initialisierung
@@ -323,24 +398,23 @@ function abdcFilter(results){
   });
 }
 
-function getDuplicates() {
-  duplicates = 0;
-  dummy = publicationData.map(paper => {
-    console.log("lenght paper split"+paper.source.split(" and ").length)
-    if(paper.source.split(" and ").length >1){
+function getDuplicates(data) {
+  let duplicates = 0;
+  data.forEach(paper => {
+    if (paper.source && paper.source.split(" and ").length > 1) {
       duplicates += 1;
-    }})
-  console.log("Anzahl der Duplikate:", duplicates);
-  return duplicates
+    }
+  });
+  return duplicates;
 }
 
 //KPI Dashboard
-function renderDashboard() {
-  kpi = {
-    total_papers: publicationData.length,
-    duplicates: getDuplicates(),
-    a_ranked: publicationData.filter(p => p.vhbRanking === "A" || p.abdcRanking === "A" || p.vhbRanking === "A+" || p.abdcRanking ==="A*").length,
-  }
+function renderDashboard(filteredData) {
+    kpi = {
+    total_papers: filteredData.length,
+    duplicates: getDuplicates(filteredData),
+    a_ranked: filteredData.filter(p => p.vhbRanking === "A" || p.abdcRanking === "A" || p.vhbRanking === "A+" || p.abdcRanking ==="A*").length,
+  };
   console.log("📊 KPI-Dashboard wird gerendert:", kpi);
 
   const dashboardEl = document.getElementById("kpi-dashboard");
@@ -357,7 +431,7 @@ function renderDashboard() {
 
   // Quellen korrekt zählen
   const sourceCounts = {};
-  publicationData.forEach(paper => {
+  filteredData.forEach(paper => {
     let sources = paper.sources ?? []; // Prüfe plural sources
     if (!Array.isArray(sources) || sources.length === 0) {
       sources = [paper.source ?? "Unknown"];
@@ -388,6 +462,7 @@ function getcountOpenAlex(){
 // ===================================================
 
 async function performSearch() {
+  isOfflineMode = false;
   // --- Clear previous results & dashboard ---
   resetDashboard();
 
@@ -475,9 +550,9 @@ const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
     }
 
     publicationData = lastResults;
-    updateList(publicationData);
-    renderYearChart(publicationData);
-    renderDashboard();
+    const filtered = updateList(publicationData);
+    renderYearChart(filtered);
+    renderDashboard(filtered);
   } catch (err) {
     alert(error.message);
     container.innerHTML = "<p class='text-red-500'>Search failed. Please try again later.</p>";
@@ -486,18 +561,63 @@ const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
 
 // Neue Funktion: Filter anwenden und Cards rendern
 function updateList(dataArray) {
+  const yearFrom = parseInt(document.getElementById("yearFrom")?.value) || 0;
+  const yearTo = parseInt(document.getElementById("yearTo")?.value) || new Date().getFullYear() + 1;
+  const minSources = Number(document.getElementById("minSources")?.value) || 1;
+
+  const vhbEnabled = document.getElementById("vhbCheckbox").checked;
+  const abdcEnabled = document.getElementById("abdcCheckbox").checked;
+  const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
+    .filter(cb => cb.checked)
+    .flatMap(cb => cb.value.split("/"));
+
+  const filtered = dataArray.filter(paper => {
+    // 1. Jahrfilter
+    const pubYear = Number(String(paper.date).split("-")[0]);
+    if (pubYear < yearFrom || pubYear > yearTo) return false;
+
+    // 2. Min Source Filter
+    const count = paper.source_count
+      ?? paper.sourceCount
+      ?? (Array.isArray(paper.sources)
+        ? new Set(paper.sources.map(s => String(s).toLowerCase())).size
+        : 1);
+    if (count < minSources) return false;
+
+    const vhb = (paper.vhbRanking || "").trim();
+    const abdc = (paper.abdcRanking || "").trim();
+
+    // 3. Neue gewünschte Ranking-Filter-Logik:
+    if (!vhbEnabled && !abdcEnabled) {
+      // KEINE Checkboxen aktiv: ALLES anzeigen!
+      if (selectedRatings.length === 0) return true;
+      // Sonst: Eines von beiden muss im Filter sein, KEIN N/A
+      const vhbOk = vhb !== "N/A" && vhb !== "k.R." && selectedRatings.includes(vhb);
+      const abdcOk = abdc !== "N/A" && selectedRatings.includes(abdc);
+      return vhbOk || abdcOk;
+    }
+    if (vhbEnabled && !abdcEnabled) {
+      // Nur VHB aktiv: VHB muss gesetzt und im Filter sein, KEIN N/A
+      return vhb !== "N/A" && vhb !== "k.R." && selectedRatings.includes(vhb);
+    }
+    if (!vhbEnabled && abdcEnabled) {
+      // Nur ABDC aktiv: ABDC muss gesetzt und im Filter sein, KEIN N/A
+      return abdc !== "N/A" && selectedRatings.includes(abdc);
+    }
+    if (vhbEnabled && abdcEnabled) {
+      // BEIDE Checkboxen aktiv: Beide Rankings müssen gültig UND im Filter sein
+      const vhbMatch = vhb !== "N/A" && vhb !== "k.R." && selectedRatings.includes(vhb);
+      const abdcMatch = abdc !== "N/A" && selectedRatings.includes(abdc);
+      return vhbMatch && abdcMatch;
+    }
+    return true; // fallback
+  });
+
+  // Rendering wie gehabt:
   const container = document.getElementById("resultsContainer");
   if (!container) return;
-  // --- Min. Quellen Filter anwenden ---
-  const filtered = dataArray.filter(p => {
-    const count = p.source_count
-               ?? p.sourceCount
-               ?? (Array.isArray(p.sources)
-                   ? new Set(p.sources.map(s => s.toLowerCase())).size
-                   : 1);
-    return count >= minSources;
-  });
   container.innerHTML = "";
+
   filtered.forEach((result, index) => {
     const extraId = `extra-info-${index}`;
     container.innerHTML += `
@@ -572,6 +692,7 @@ function updateList(dataArray) {
       </div>
     `;
   });
+  return filtered;
 }
 
 // Nur die minSources-Variable aktualisieren
@@ -579,12 +700,135 @@ document.getElementById("minSources")?.addEventListener("change", (e) => {
   minSources = Number(e.target.value);
 });
 
-// Nur beim Klick auf Apply Filters rendern
 document.getElementById("applyFilter")?.addEventListener("click", () => {
-  if (lastResults.length) {
-    updateList(lastResults);
-  }
+  const filtered = updateList(publicationData);
+  renderYearChart(filtered);
+  renderDashboard(filtered);
 });
 
+async function processUploadedFile() {
+  const fileInput = document.getElementById("uploadInput");
+  const file = fileInput.files[0];
+  if (!file) {
+    alert("Bitte wähle eine Datei aus.");
+    return;
+    isOfflineMode = true;
+  }
 
+  // Aktuelle Filter abrufen
+  const filters = {
+    q: "uploaded_file",
+    source: [],
+    range: {
+      start: parseInt(document.getElementById("yearFrom")?.value) || 0,
+      end: parseInt(document.getElementById("yearTo")?.value) || new Date().getFullYear() + 1
+    },
+    ranking: [],
+    rating: Array.from(document.querySelectorAll(".ratingCheckbox"))
+      .filter(cb => cb.checked)
+      .flatMap(cb => cb.value.split("/"))
+  };
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("filters", JSON.stringify(filters));
+
+  const container = document.getElementById("resultsContainer");
+  container.innerHTML = "<p class='text-gray-600'>Processing...</p>";
+  resetDashboard();
+
+  try {
+    const response = await axios.post("/api/uploadfile", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+
+    const data = response.data;
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = "<p class='text-red-500'>Keine passenden Paper gefunden.</p>";
+      // Intro trotzdem zeigen, da leer
+      const legendEl = document.getElementById("introLegend");
+      if (legendEl) legendEl.style.display = "block";
+      return;
+    }
+
+// Ergebnisse da → Intro ausblenden
+    const legendEl = document.getElementById("introLegend");
+    if (legendEl) legendEl.style.display = "none";
+
+    publicationData = data;
+    const filtered = updateList(data);
+    renderYearChart(filtered);
+    renderDashboard(filtered);
+    console.log("📥 Offline Upload verarbeitet:", data);
+
+  } catch (err) {
+    console.error("Fehler beim Hochladen:", err);
+    container.innerHTML = "<p class='text-red-500'>Fehler beim Verarbeiten der Datei.</p>";
+  }
+
+  // Nach Upload: Process-Button deaktivieren
+  const processBtn = document.querySelector('[onclick="processUploadedFile()"]');
+  if (processBtn) processBtn.disabled = true;
+}
+
+// ===================================================
+// 🆕 applyFilters: Entscheidet, ob Datei-Upload oder normale Suche
+// ===================================================
+
+function applyFilters() {
+  if (isOfflineMode) {
+    const filtered = updateList(publicationData);
+    renderYearChart(filtered);
+    renderDashboard(filtered);
+  } else {
+    performSearch();
+  }
+}
+
+document.getElementById("uploadInput")?.addEventListener("change", function() {
+  const processBtn = document.querySelector('[onclick="processUploadedFile()"]');
+  if (processBtn) processBtn.disabled = false;
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("uploadInput");
+
+  if (!dropzone || !fileInput) return;
+
+  // Drag&Drop Support:
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("ring-2", "ring-blue-300");
+  });
+  dropzone.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("ring-2", "ring-blue-300");
+  });
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("ring-2", "ring-blue-300");
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      // Automatisch Verarbeitung auslösen:
+      if (typeof processUploadedFile === "function") processUploadedFile();
+    }
+  });
+  // Klick auf Dropzone öffnet Dateiauswahl
+  dropzone.addEventListener("click", () => fileInput.click());
+  // Manuelle Auswahl löst auch Verarbeitung aus
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length) {
+      if (typeof processUploadedFile === "function") processUploadedFile();
+    }
+  });
+});
+
+document.getElementById("resetToOnlineBtn")?.addEventListener("click", () => {
+  isOfflineMode = false;
+  publicationData = [];
+  resetDashboard();
+  document.getElementById("searchInput").value = "";
+  performSearch();
+});
 

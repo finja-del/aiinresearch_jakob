@@ -136,3 +136,4 @@ class SearchController:
                     all_results += results
 
         return DuplicateMergeService.merge_duplicates(all_results)
+

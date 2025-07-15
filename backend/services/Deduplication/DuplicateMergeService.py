@@ -30,8 +30,13 @@ class DuplicateMergeService:
 
     @staticmethod
     def _normalize(text: str | None) -> str:
-        """Robustly convert None to empty string and strip/lowercase."""
-        return str(text or "").strip().lower()
+        """Robustly convert None or nan to empty string and strip/lowercase."""
+        import math
+        if text is None:
+            return ""
+        if isinstance(text, float) and math.isnan(text):
+            return ""
+        return str(text).strip().lower()
 
 
 
@@ -61,7 +66,7 @@ class DuplicateMergeService:
         - If DOI is present, return DOI key AND also allow title+year key to be used as a secondary key
         - This enables merging of entries with the same title/year regardless of DOI presence (helps merge title duplicates with or without DOI).
         """
-        doi_key = (p.doi or "").strip().lower()
+        doi_key = DuplicateMergeService._normalize(p.doi)
         title_key = DuplicateMergeService._title_year_key(p)
         # If DOI is present, use both keys (DOI and title_key) as possible keys for matching
         # The main merge_duplicates logic will try both keys for matching.
