@@ -50,7 +50,7 @@ let minSources = 1;    // 1 = alle, 2 = zweifach, 3 = dreifach
 let lastResults = [];  // speichert API-Ergebnisse
 let searchQuery = "null";
 let downloadName = searchQuery;
-
+let allSelected = false;
 // ===================================================
 // 🧹 Helper: Reset Dashboard/results state
 // ===================================================
@@ -137,6 +137,10 @@ function renderYearChart(data) {
     }
   });
 }
+//vergleicht nur zwei arrays und gibt die werte zurück die nicht im kontrollarray sind
+function findMissingEntries(array, controlArray) {
+  return controlArray.filter(item => !array.includes(item));
+}
 
 //Exportieren der Chart-Daten als CSV
  async function downloadPapers() {
@@ -144,26 +148,43 @@ function renderYearChart(data) {
         alert("Bitte wählen mindestens ein Paper aus, um es zu exportieren.");
         return;
     }
+    const selectedFields = getSelectedExportFields();
+    const controlFields = ['title','date', 'source', 'sources', 'source_count', 'vhbRanking', 'abdcRanking', 'journal_name', 'issn', 'eissn', 'doi', 'url', 'citations', 'journal_quartile']
+    const excludedFields = findMissingEntries(selectedFields,controlFields)
+    console.log("Exportiere nur diese Felder:", selectedFields);
     try {
         // Annahme: publicationData enthält die PaperDTO-Liste
-         const papersToExport = Array.from(selectedPapers.values()).map(paper => ({
-          title: paper.title || "N/A",
-          authors: paper.authors || "Unknown Author",
-          abstract: paper.abstract || "N/A",
-          date: paper.date || "",
-          source: paper.source || "",
-          sources: paper.sources || [],
-          source_count: paper.source_count || 0,
-          vhbRanking: paper.vhbRanking || "N/A",
-          abdcRanking: paper.abdcRanking || "N/A",
-          journal_name: paper.journal_name || "N/A",
-          issn: paper.issn || "N/A",
-          eissn: paper.eISSN || "N/A",
-          doi: paper.doi || "N/A",
-          url: paper.url || "N/A",
-          citations: paper.citations || 0,
-          journal_quartile: paper.journal_quartile || ""
-      }));
+
+        const papersToExport = Array.from(selectedPapers.values()).map(paper => {
+          const exportObj = {
+            title: paper.title || "N/A",
+            authors: paper.authors || "Unknown Author",
+            abstract: paper.abstract || "N/A",
+            date: paper.date || "",
+            source: paper.source || "",
+            sources: paper.sources || [],
+            source_count: paper.source_count || 0,
+            vhbRanking: paper.vhbRanking || "N/A",
+            abdcRanking: paper.abdcRanking || "N/A",
+            journal_name: paper.journal_name || "N/A",
+            issn: paper.issn || "N/A",
+            eissn: paper.eISSN || "N/A",
+            doi: paper.doi || "N/A",
+            url: paper.url || "N/A",
+            citations: paper.citations || 0,
+            journal_quartile: paper.journal_quartile || ""
+          };
+
+          // Felder auf "" setzen, wenn sie in excludedFields stehen
+          excludedFields.forEach(field => {
+            if (field in exportObj) {
+              exportObj[field] = "";
+            }
+          });
+
+          return exportObj;
+        });
+        
         console.log("Exportiere folgende Daten:", papersToExport);
          const response = await axios.post("/api/download", papersToExport, {
             headers: {
@@ -190,6 +211,7 @@ function renderYearChart(data) {
         alert("Fehler beim Export: " + error.message);
     }
 }
+
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
   const paper = publicationData[index];
@@ -197,12 +219,12 @@ function toggleSelect(index, btn) {
 
   if (!selectedPapers.has(paperKey)) {
     btn.classList.add('text-green-600');
-    btn.textContent = '✅ Selected';
+    btn.textContent = '✅\n Selected';
     selectedPapers.set(paperKey, paper);
     renderSelectedPapersSidebar();
   } else {
     btn.classList.remove('text-green-600');
-    btn.textContent = '◯ Select';
+    btn.textContent = '◯\n Select';
     selectedPapers.delete(paperKey);
     renderSelectedPapersSidebar();
   }
@@ -246,6 +268,17 @@ function renderSelectedPapersList() {
   }
 }
 
+// ===================================================
+//Export-Filterfunktion
+function toggleOptions() {
+    const container = document.getElementById("optionsContainer");
+    container.classList.toggle("hidden");
+  }
+
+  function getSelectedExportFields() {
+    return Array.from(document.querySelectorAll("input[name='exportOption']:checked"))
+                .map(cb => cb.value);
+  }
 
 //Sidebar-Funktion: Rendern der ausgewählten Papers in der Seitenleiste
 function renderSelectedPapersSidebar() {
@@ -273,6 +306,25 @@ function removePaperByKey(key) {
 }
 
 // ===================================================
+//Filterfunktionen: abcd
+function abcdcheckboxFilter(result){
+  const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
+    .filter(cb => cb.checked)
+    .flatMap(cb => cb.value.split("/"));
+    return result.filter(p => {
+    const vhbRanking = p.vhbRanking || "N/A";
+    const abdcRanking = p.abdcRanking || "N/A";
+
+    // 2. Immer rausfiltern: "N/A" und "k.R."
+    if ((vhbRanking === "N/A" || vhbRanking === "k.R.") && abdcRanking =="N/A") return false;
+
+    // 3. Wenn keine Auswahl: alle außer "N/A" und "k.R." anzeigen
+    if (selectedRatings.length === 0) return true;
+
+    // 4. Nur anzeigen, wenn das vhbRanking zur Auswahl passt
+    return (selectedRatings.includes(vhbRanking) || selectedRatings.includes(abdcRanking));
+  });
+}
 //  Filter: VHB und ABDC Rankings
 function filterABCD(results){
   const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
@@ -462,9 +514,11 @@ const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
 
     const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
     .filter(cb => cb.checked)
-    .flatMap(cb => cb.value.split("/")); 
+    .flatMap(cb => cb.value.split("/"));
+    console.log("Selected ratings:", selectedRatings);
+    console.log(selectedRatings.length, "ratings selected");
     if (selectedRatings.length > 0) {
-      lastResults = filterABCD(lastResults);
+      lastResults = abcdcheckboxFilter(lastResults);
     }
 
     if (document.getElementById("vhbCheckbox").checked){
@@ -512,10 +566,11 @@ function updateList(dataArray) {
           </div>
           <div>
             <button 
+                id="selectBtn-${index}"
                 class="text-sm text-gray-600 hover:text-blue-600"
                 onclick="toggleSelect(${index}, this)"
             >
-                ◯ Select
+                ◯<br>Select
             </button>
           </div>
         </div>
