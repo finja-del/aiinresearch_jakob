@@ -10,6 +10,7 @@ app = FastAPI()
 # Mount frontend static files
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
+
 # HTML routes (basic file responses)
 @app.get("/")
 async def home():
