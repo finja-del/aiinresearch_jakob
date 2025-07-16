@@ -138,6 +138,13 @@ if (modeOnlineBtn && modeOfflineBtn) {
   publicationData = [];
   selectedPapers.clear();
   isOfflineMode = true;
+  // ==== Filter zurücksetzen bei Upload/Offline ====
+  document.getElementById("vhbCheckbox").checked = false;
+  document.getElementById("abdcCheckbox").checked = false;
+  Array.from(document.querySelectorAll(".ratingCheckbox")).forEach(cb => cb.checked = false);
+  document.getElementById("yearFrom").value = "";
+  document.getElementById("yearTo").value = "";
+  document.getElementById("minSources").value = 1;
   modeOfflineBtn.classList.add("bg-blue-600", "text-white");
   modeOfflineBtn.classList.remove("bg-gray-200", "text-blue-800");
   modeOfflineBtn.style.opacity = 1;
@@ -603,47 +610,43 @@ function updateList(dataArray) {
     .filter(cb => cb.checked)
     .flatMap(cb => cb.value.split("/"));
 
-  const filtered = dataArray.filter(paper => {
-    // 1. Jahrfilter
-    const pubYear = Number(String(paper.date).split("-")[0]);
-    if (pubYear < yearFrom || pubYear > yearTo) return false;
+  let filtered = [];
 
-    // 2. Min Source Filter
-    const count = paper.source_count
-      ?? paper.sourceCount
-      ?? (Array.isArray(paper.sources)
-        ? new Set(paper.sources.map(s => String(s).toLowerCase())).size
-        : 1);
-    if (count < minSources) return false;
+  // ===== OFFLINE-FILTER =====
+  if (isOfflineMode) {
+    filtered = dataArray.filter(paper => {
+      // 1. Jahrfilter
+      const pubYear = Number(String(paper.date).split("-")[0]);
+      if (pubYear < yearFrom || pubYear > yearTo) return false;
 
-    const vhb = (paper.vhbRanking || "").trim();
-    const abdc = (paper.abdcRanking || "").trim();
+      // 2. Min Source Filter
+      const count = paper.source_count
+          ?? paper.sourceCount
+          ?? (Array.isArray(paper.sources)
+              ? new Set(paper.sources.map(s => String(s).toLowerCase())).size
+              : 1);
+      if (count < minSources) return false;
 
-    // 3. Neue gewünschte Ranking-Filter-Logik:
-    if (!vhbEnabled && !abdcEnabled) {
-      if (selectedRatings.length === 0) return true;
-      const vhbOk = vhb !== "N/A" && vhb !== "k.R." && selectedRatings.includes(vhb);
-      const abdcOk = abdc !== "N/A" && selectedRatings.includes(abdc);
-      return vhbOk || abdcOk;
-    }
-    if (vhbEnabled && !abdcEnabled) {
-      if (vhb === "N/A" || vhb === "k.R.") return false;
-      if (selectedRatings.length === 0) return true;
-      return selectedRatings.includes(vhb);
-    }
-    if (!vhbEnabled && abdcEnabled) {
-      if (abdc === "N/A") return false;
-      if (selectedRatings.length === 0) return true;
-      return selectedRatings.includes(abdc);
-    }
-    if (vhbEnabled && abdcEnabled) {
-      if (vhb === "N/A" || vhb === "k.R." || abdc === "N/A") return false;
-      if (selectedRatings.length === 0) return true;
-      // HIER: Beide Rankings müssen im Rating-Set sein!
-      return selectedRatings.includes(vhb) && selectedRatings.includes(abdc);
-    }
-    return true;
-  });
+      const vhb = (paper.vhbRanking || "").trim();
+      const abdc = (paper.abdcRanking || "").trim();
+
+      // ----- UNABHÄNGIGE, ENTPANNTE LOGIK -----
+
+      if (vhbEnabled && abdcEnabled) {
+        // Beide Rankings müssen gesetzt und gültig sein!
+        if (vhb === "N/A" || vhb === "k.R." || abdc === "N/A") return false;
+        if (selectedRatings.length === 0) return true;
+        // Beide müssen im Rating-Set sein!
+        return selectedRatings.includes(vhb) && selectedRatings.includes(abdc);
+      }
+
+      if (selectedRatings.length > 0) {
+        // Nur Rating: Mindestens eines muss passen
+        return selectedRatings.includes(vhb) || selectedRatings.includes(abdc);
+      }
+      return true; // Wenn nichts ausgewählt, alles anzeigen
+    });
+  }
 
   // Rendering wie gehabt:
   const container = document.getElementById("resultsContainer");
