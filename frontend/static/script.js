@@ -449,10 +449,15 @@ function getDuplicates(data) {
 
 //KPI Dashboard
 function renderDashboard(filteredData) {
-    kpi = {
+  kpi = {
     total_papers: filteredData.length,
     duplicates: getDuplicates(filteredData),
-    a_ranked: filteredData.filter(p => p.vhbRanking === "A" || p.abdcRanking === "A" || p.vhbRanking === "A+" || p.abdcRanking ==="A*").length,
+    a_ranked: filteredData.filter(p =>
+      p.vhbRanking === "A" ||
+      p.abdcRanking === "A" ||
+      p.vhbRanking === "A+" ||
+      p.abdcRanking === "A*"
+    ).length,
   };
   console.log("📊 KPI-Dashboard wird gerendert:", kpi);
 
@@ -462,38 +467,31 @@ function renderDashboard(filteredData) {
   // Zeige Dashboard an
   dashboardEl.style.display = "block";
 
-
   // Fülle die KPI-Werte ein
   document.getElementById("total-papers").textContent = kpi.total_papers ?? "0";
-  document.getElementById("duplicates").textContent = kpi.duplicates || "0";
-  document.getElementById("a-ranked").textContent = kpi.a_ranked ?? "0";
+  document.getElementById("duplicates").textContent  = kpi.duplicates || "0";
+  document.getElementById("a-ranked").textContent    = kpi.a_ranked ?? "0";
 
-  // Quellen korrekt zählen
-  const sourceCounts = {};
+  // Quellen korrekt zählen (nur aus gefilterten Daten!)
+  const sourceCounts = { WOS: 0, Scopus: 0, OpenAlex: 0 };
   filteredData.forEach(paper => {
-    let sources = paper.sources ?? []; // Prüfe plural sources
+    // Prüfe, ob plural "sources" existiert, sonst fallback auf "source"
+    let sources = paper.sources ?? [];
     if (!Array.isArray(sources) || sources.length === 0) {
       sources = [paper.source ?? "Unknown"];
     }
     sources.forEach(src => {
-      sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+      if (src === "WOS") sourceCounts.WOS += 1;
+      if (src === "Scopus") sourceCounts.Scopus += 1;
+      if (src === "OpenAlex") sourceCounts.OpenAlex += 1;
     });
   });
-    // Formatierte Liste der Datenbanken
-  const sourcesList = {WOS: getcountWOS(), Scopus: getcountScopus(), OpenAlex: getcountOpenAlex()};
-  const sourcesEntries = Object.entries(sourcesList)
-    .map(([key, value]) => `${key}: ${value}`)
-  document.getElementById("sources").innerHTML = sourcesEntries.map(e => `<div>${e}</div>`).join("") || "No sources found";
-}
 
-function getcountWOS(){
-  return publicationData.filter(p => p.source === "WOS").length;
-}
-function getcountScopus(){
-  return publicationData.filter(p => p.source === "Scopus").length;
-}
-function getcountOpenAlex(){
-  return publicationData.filter(p => p.source === "OpenAlex").length;
+  // Formatierte Liste der Datenbanken
+  const sourcesEntries = Object.entries(sourceCounts)
+    .map(([key, value]) => `${key}: ${value}`);
+  document.getElementById("sources").innerHTML = sourcesEntries
+    .map(e => `<div>${e}</div>`).join("") || "No sources found";
 }
 
 // ===================================================
@@ -502,26 +500,23 @@ function getcountOpenAlex(){
 
 async function performSearch() {
   isOfflineMode = false;
-  // --- Clear previous results & dashboard ---
   resetDashboard();
 
-  // Wenn kein Suchbegriff eingegeben → Intro-Legende anzeigen und abbrechen
+  // 1. Payload für das Backend bauen
   const rawQuery = document.getElementById("searchInput")?.value?.trim() || "";
   if (rawQuery === "") {
     const legendEl = document.getElementById("introLegend");
     if (legendEl) legendEl.style.display = "block";
-    return;     // keine API-Abfrage, altes Dashboard bleibt gelöscht
+    return;
   }
 
-  const heute = new Date();         //Änderung, da 9999 fehler wirft für WOS
-  const yyyy = heute.getFullYear()+1;
+  const heute = new Date();
+  const yyyy = heute.getFullYear() + 1;
 
-  const searchInput = rawQuery;
   const yearFrom = parseInt(document.getElementById("yearFrom")?.value) || 0;
-  const yearTo = parseInt(document.getElementById("yearTo")?.value) || yyyy; // Änderung: Jahr bis auf nächstes Jahr setzen
-  searchQuery = [searchInput || "null", yearFrom, yearTo].join("_");
+  const yearTo = parseInt(document.getElementById("yearTo")?.value) || yyyy;
   const payload = {
-    q: searchInput,
+    q: rawQuery,
     range: { start: yearFrom, end: yearTo },
     source: Array.from(document.querySelectorAll(".sourceCheckbox"))
       .filter(cb => cb.checked)
@@ -539,69 +534,40 @@ async function performSearch() {
   container.innerHTML = "<p class='text-gray-600'>Loading...</p>";
 
   try {
-    // 1️⃣  API‑Request
     const response = await axios.post("/api/search", payload, {
       headers: { "Content-Type": "application/json" }
     });
     const data = response.data;
 
-    // Legende ein-/ausblenden je nach Trefferzahl
-    const legendEl = document.getElementById("introLegend");
-
+    // Nur wenn es Ergebnisse gibt
     if (!Array.isArray(data) || data.length === 0) {
       resetDashboard();
       renderDashboard();
+      const legendEl = document.getElementById("introLegend");
       if (legendEl) legendEl.style.display = "block";
       return;
     }
 
-// es gibt Ergebnisse → Legende ausblenden
-if (legendEl) legendEl.style.display = "none";
-    const sortOption = document.getElementById("sortOption")?.value;
-const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
+    // Ergebnisse sind da → Legende ausblenden
+    const legendEl = document.getElementById("introLegend");
+    if (legendEl) legendEl.style.display = "none";
 
-    if (sortOption === "newest") {
-      data.sort((a, b) => new Date(b.date) - new Date(a.date));
-    } else if (sortOption === "oldest") {
-      data.sort((a, b) => new Date(a.date) - new Date(b.date));
-    } else if (sortOption === "combined-ranking") {
-      data.sort((a, b) => {
-        const rankA = rankingOrder.indexOf(a.vhbRanking || a.abdcRanking || "N/A");
-        const rankB = rankingOrder.indexOf(b.vhbRanking || b.abdcRanking || "N/A");
-        return rankA - rankB;
-      });
-    }
+    // WICHTIG: Nur noch die lokalen Filter anwenden!
+    publicationData = data; // → alle API-Ergebnisse
 
-    lastResults = data;
-
-    const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
-    .filter(cb => cb.checked)
-    .flatMap(cb => cb.value.split("/")); 
-    if (selectedRatings.length > 0) {
-      lastResults = filterABCD(lastResults);
-    }
-
-    if (document.getElementById("vhbCheckbox").checked){
-      lastResults = vhbFilter(lastResults);
-    }
-    if (document.getElementById("abdcCheckbox").checked){
-      lastResults = abdcFilter(lastResults);
-    }
-
-    publicationData = lastResults;
+    // Hier werden nur noch minSources und Ranking angewendet (egal ob Online/Offline)
     const filtered = updateList(publicationData);
     renderYearChart(filtered);
     renderDashboard(filtered);
-  } catch (err) {
-    alert(error.message);
+
+  } catch (error) {
+    alert(error.message || "Search failed. Please try again later.");
     container.innerHTML = "<p class='text-red-500'>Search failed. Please try again later.</p>";
   }
 }
 
 // Neue Funktion: Filter anwenden und Cards rendern
 function updateList(dataArray) {
-  const yearFrom = parseInt(document.getElementById("yearFrom")?.value) || 0;
-  const yearTo = parseInt(document.getElementById("yearTo")?.value) || new Date().getFullYear() + 1;
   const minSources = Number(document.getElementById("minSources")?.value) || 1;
 
   const vhbEnabled = document.getElementById("vhbCheckbox").checked;
@@ -610,43 +576,42 @@ function updateList(dataArray) {
     .filter(cb => cb.checked)
     .flatMap(cb => cb.value.split("/"));
 
-  let filtered = [];
+  let filtered = dataArray.filter(paper => {
+    // 1. Min Source Filter (immer!)
+    const count = paper.source_count
+      ?? paper.sourceCount
+      ?? (Array.isArray(paper.sources)
+          ? new Set(paper.sources.map(s => String(s).toLowerCase())).size
+          : 1);
+    if (count < minSources) return false;
 
-  // ===== OFFLINE-FILTER =====
-  if (isOfflineMode) {
-    filtered = dataArray.filter(paper => {
-      // 1. Jahrfilter
-      const pubYear = Number(String(paper.date).split("-")[0]);
-      if (pubYear < yearFrom || pubYear > yearTo) return false;
+    const vhb = (paper.vhbRanking || "").trim();
+    const abdc = (paper.abdcRanking || "").trim();
 
-      // 2. Min Source Filter
-      const count = paper.source_count
-          ?? paper.sourceCount
-          ?? (Array.isArray(paper.sources)
-              ? new Set(paper.sources.map(s => String(s).toLowerCase())).size
-              : 1);
-      if (count < minSources) return false;
-
-      const vhb = (paper.vhbRanking || "").trim();
-      const abdc = (paper.abdcRanking || "").trim();
-
-      // ----- UNABHÄNGIGE, ENTPANNTE LOGIK -----
-
-      if (vhbEnabled && abdcEnabled) {
-        // Beide Rankings müssen gesetzt und gültig sein!
-        if (vhb === "N/A" || vhb === "k.R." || abdc === "N/A") return false;
-        if (selectedRatings.length === 0) return true;
-        // Beide müssen im Rating-Set sein!
-        return selectedRatings.includes(vhb) && selectedRatings.includes(abdc);
-      }
-
-      if (selectedRatings.length > 0) {
-        // Nur Rating: Mindestens eines muss passen
-        return selectedRatings.includes(vhb) || selectedRatings.includes(abdc);
-      }
-      return true; // Wenn nichts ausgewählt, alles anzeigen
-    });
-  }
+    // 2. Ranking-Filter
+    if (vhbEnabled && abdcEnabled) {
+      // Beide Rankings müssen gesetzt und gültig sein!
+      if (vhb === "N/A" || vhb === "k.R." || abdc === "N/A") return false;
+      if (selectedRatings.length === 0) return true;
+      // Beide müssen im Rating-Set sein!
+      return selectedRatings.includes(vhb) && selectedRatings.includes(abdc);
+    }
+    if (vhbEnabled) {
+      if (vhb === "N/A" || vhb === "k.R.") return false;
+      if (selectedRatings.length === 0) return true;
+      return selectedRatings.includes(vhb);
+    }
+    if (abdcEnabled) {
+      if (abdc === "N/A") return false;
+      if (selectedRatings.length === 0) return true;
+      return selectedRatings.includes(abdc);
+    }
+    // Wenn nur Rating ausgewählt (ohne Checkbox): mindestens eines muss passen
+    if (selectedRatings.length > 0) {
+      return selectedRatings.includes(vhb) || selectedRatings.includes(abdc);
+    }
+    return true; // Zeige alles, wenn keine Einschränkung
+  });
 
   // Rendering wie gehabt:
   const container = document.getElementById("resultsContainer");
@@ -769,8 +734,9 @@ async function processUploadedFile() {
   formData.append("filters", JSON.stringify(filters));
 
   const container = document.getElementById("resultsContainer");
-  container.innerHTML = "<p class='text-gray-600'>Processing...</p>";
+  container.innerHTML = "<p class='text-gray-600'>Loading...</p>";
   resetDashboard();
+  await new Promise(r => setTimeout(r, 50)); // <--- Erzwingt UI-Refresh!
 
   try {
     const response = await axios.post("/api/uploadfile", formData, {
