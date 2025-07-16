@@ -166,7 +166,7 @@ let minSources = 1;    // 1 = alle, 2 = zweifach, 3 = dreifach
 let lastResults = [];  // speichert API-Ergebnisse
 let searchQuery = "null";
 let downloadName = searchQuery;
-
+let allSelected = false;
 // ===================================================
 // 🧹 Helper: Reset Dashboard/results state
 // ===================================================
@@ -251,6 +251,10 @@ function renderYearChart(data) {
     }
   });
 }
+//vergleicht nur zwei arrays und gibt die werte zurück die nicht im kontrollarray sind
+function findMissingEntries(array, controlArray) {
+  return controlArray.filter(item => !array.includes(item));
+}
 
 //Exportieren der Chart-Daten als CSV
  async function downloadPapers() {
@@ -258,26 +262,43 @@ function renderYearChart(data) {
         alert("Bitte wählen mindestens ein Paper aus, um es zu exportieren.");
         return;
     }
+    const selectedFields = getSelectedExportFields();
+    const controlFields = ['title','date', 'source', 'sources', 'source_count', 'vhbRanking', 'abdcRanking', 'journal_name', 'issn', 'eissn', 'doi', 'url', 'citations', 'journal_quartile']
+    const excludedFields = findMissingEntries(selectedFields,controlFields)
+    console.log("Exportiere nur diese Felder:", selectedFields);
     try {
         // Annahme: publicationData enthält die PaperDTO-Liste
-         const papersToExport = Array.from(selectedPapers.values()).map(paper => ({
-          title: paper.title || "N/A",
-          authors: paper.authors || "Unknown Author",
-          abstract: paper.abstract || "N/A",
-          date: paper.date || "",
-          source: paper.source || "",
-          sources: paper.sources || [],
-          source_count: paper.source_count || 0,
-          vhbRanking: paper.vhbRanking || "N/A",
-          abdcRanking: paper.abdcRanking || "N/A",
-          journal_name: paper.journal_name || "N/A",
-          issn: paper.issn || "N/A",
-          eissn: paper.eISSN || "N/A",
-          doi: paper.doi || "N/A",
-          url: paper.url || "N/A",
-          citations: paper.citations || 0,
-          journal_quartile: paper.journal_quartile || ""
-      }));
+
+        const papersToExport = Array.from(selectedPapers.values()).map(paper => {
+          const exportObj = {
+            title: paper.title || "N/A",
+            authors: paper.authors || "Unknown Author",
+            abstract: paper.abstract || "N/A",
+            date: paper.date || "",
+            source: paper.source || "",
+            sources: paper.sources || [],
+            source_count: paper.source_count || 0,
+            vhbRanking: paper.vhbRanking || "N/A",
+            abdcRanking: paper.abdcRanking || "N/A",
+            journal_name: paper.journal_name || "N/A",
+            issn: paper.issn || "N/A",
+            eissn: paper.eISSN || "N/A",
+            doi: paper.doi || "N/A",
+            url: paper.url || "N/A",
+            citations: paper.citations || 0,
+            journal_quartile: paper.journal_quartile || ""
+          };
+
+          // Felder auf "" setzen, wenn sie in excludedFields stehen
+          excludedFields.forEach(field => {
+            if (field in exportObj) {
+              exportObj[field] = "";
+            }
+          });
+
+          return exportObj;
+        });
+
         console.log("Exportiere folgende Daten:", papersToExport);
          const response = await axios.post("/api/download", papersToExport, {
             headers: {
@@ -304,6 +325,66 @@ function renderYearChart(data) {
         alert("Fehler beim Export: " + error.message);
     }
 }
+
+function toggleSelectAll() {
+  const container = document.getElementById("resultsContainer");
+  if (!container) return;
+
+  const cards = container.querySelectorAll(".bg-white.border"); // jedes Paper-Div
+  if (cards.length !== publicationData.length) {
+    console.warn("Anzahl der Cards und lastResults stimmt nicht überein.");
+  }
+  console.log("AllSelected:", allSelected);
+  if (!allSelected) {
+    // Alle Paper hinzufügen
+    publicationData.forEach((paper, index) => {
+      const key = generatePaperKey(paper);
+      selectedPapers.set(key, paper);
+
+      const card = cards[index];
+      if (card) {
+        const btn = document.getElementById(`selectBtn-${index}`);
+        if(btn) {
+          btn.classList.add('text-green-600');
+          btn.textContent = "✅\nSelected";
+        }
+      }
+    });
+  } else {
+    // Alle Paper entfernen
+    publicationData.forEach((paper, index) => {
+      const key = generatePaperKey(paper);
+      selectedPapers.delete(key);
+
+      const card = cards[index];
+      if (card) {
+
+        const btn = document.getElementById(`selectBtn-${index}`);
+        if(btn) {
+          btn.classList.remove('text-green-600');
+          btn.textContent = "◯\nSelect";
+        }
+      }
+    });
+  }
+
+  // Button-Text aktualisieren
+  const btn = document.getElementById("toggleSelectAllBtn");
+  btn.textContent = allSelected ? "Select All" : "Deselect All";
+
+  allSelected = !allSelected;
+
+  console.log("Aktuell ausgewählte Paper:", selectedPapers);
+  renderSelectedPapersSidebar();
+  renderSelectedPapersList();
+  renderSelectedButton();
+}
+function renderSelAllButton(){
+  const btn = document.getElementById("toggleSelectAllBtn");
+  btn.textContent = allSelected ? "Select All" : "Deselect All";
+
+  allSelected = !allSelected;
+}
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
   const paper = publicationData[index];
@@ -311,14 +392,20 @@ function toggleSelect(index, btn) {
 
   if (!selectedPapers.has(paperKey)) {
     btn.classList.add('text-green-600');
-    btn.textContent = '✅ Selected';
+    btn.textContent = '✅\n Selected';
     selectedPapers.set(paperKey, paper);
     renderSelectedPapersSidebar();
+    allSelected = true;
+    renderSelAllButton();
   } else {
     btn.classList.remove('text-green-600');
-    btn.textContent = '◯ Select';
+    btn.textContent = '◯\n Select';
     selectedPapers.delete(paperKey);
+    if(selectedPapers.length === 0){
+      allSelected = false;
+    }
     renderSelectedPapersSidebar();
+    renderSelAllButton();
   }
 }
 
@@ -352,14 +439,55 @@ function renderSelectedPapersList() {
     li.className = "flex justify-between items-center text-sm bg-gray-100 px-3 py-2 rounded";
 
     li.innerHTML = `
-      <span class="truncate max-w-[200px]" title="${paper.title}">${paper.title}</span>
-      <button onclick="removePaperByKey('${key}')" class="text-red-500 hover:text-red-1000 text-sm font-bold">–</button>
-    `;
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
+    <div class="flex flex-col sm:max-w-[80%]">
+      <span class="font-medium truncate" title="${paper.title}">${paper.title}</span>
+      <div class="flex flex-row justify-between text-xs text-gray-600 w-full">
+        <span class="truncate" title="${paper.journal_name}">
+          ${paper.journal_name || "Unknown Journal"}
+        </span>
+        <span class="ml-4 whitespace-nowrap">${paper.date?.split("-")[0] || "—"}</span>
+      </div>
+    </div>
+    <button onclick="removePaperByKey('${key}')" 
+            class="text-red-700 hover:text-red-700 text-sm font-bold ml-4 mt-2 sm:mt-0">
+      – 
+    </button>
+  </div>
+`;
 
     list.appendChild(li);
   }
 }
 
+function renderSelectedButton(){
+   publicationData.forEach((paper, index) => {
+    const key = generatePaperKey(paper);
+    const btn = document.getElementById(`selectBtn-${index}`);
+
+    if (!btn) return;
+
+    if (selectedPapers.has(key)) {
+      btn.classList.add("text-green-600");
+      btn.textContent = "✅\nSelected";
+    } else {
+      btn.classList.remove("text-green-600");
+      btn.textContent = "◯\nSelect";
+    }
+  });
+}
+
+// ===================================================
+//Export-Filterfunktion
+function toggleOptions() {
+    const container = document.getElementById("optionsContainer");
+    container.classList.toggle("hidden");
+  }
+
+  function getSelectedExportFields() {
+    return Array.from(document.querySelectorAll("input[name='exportOption']:checked"))
+                .map(cb => cb.value);
+  }
 
 //Sidebar-Funktion: Rendern der ausgewählten Papers in der Seitenleiste
 function renderSelectedPapersSidebar() {
@@ -371,9 +499,22 @@ function renderSelectedPapersSidebar() {
     li.className = "flex justify-between items-center text-sm bg-gray-100 px-3 py-2 rounded";
 
     li.innerHTML = `
-      <span class="truncate max-w-[160px]" title="${paper.title}">${paper.title}</span>
-      <button onclick="removePaperByKey('${key}')" class="text-red-500 hover:text-red-700 text-sm font-bold">–</button>
-    `;
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
+    <div class="flex flex-col sm:max-w-[80%]">
+      <span class="font-medium truncate" title="${paper.title}">${paper.title}</span>
+      <div class="flex flex-row justify-between text-xs text-gray-600 w-full">
+        <span class="truncate" title="${paper.journal_name}">
+          ${paper.journal_name || "Unknown Journal"}
+        </span>
+        <span class="ml-4 whitespace-nowrap">${paper.date?.split("-")[0] || "—"}</span>
+      </div>
+    </div>
+    <button onclick="removePaperByKey('${key}')" 
+            class="text-red-700 hover:text-red-700 text-sm font-bold ml-4 mt-2 sm:mt-0">
+      – 
+    </button>
+  </div>
+`;
 
     list.appendChild(li);
   }
@@ -382,11 +523,35 @@ function renderSelectedPapersSidebar() {
 // Funktion zum Entfernen eines Papers aus der Liste
 function removePaperByKey(key) {
   selectedPapers.delete(key);
+  if(selectedPapers.length === 0){
+    allSelected = false;
+  }
   renderSelectedPapersList();
   renderSelectedPapersSidebar();
+  renderSelectedButton();
+  renderSelAllButton();
 }
 
 // ===================================================
+//Filterfunktionen: abcd
+function abcdcheckboxFilter(result){
+  const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
+    .filter(cb => cb.checked)
+    .flatMap(cb => cb.value.split("/"));
+    return result.filter(p => {
+    const vhbRanking = p.vhbRanking || "N/A";
+    const abdcRanking = p.abdcRanking || "N/A";
+
+    // 2. Immer rausfiltern: "N/A" und "k.R."
+    if ((vhbRanking === "N/A" || vhbRanking === "k.R.") && abdcRanking =="N/A") return false;
+
+    // 3. Wenn keine Auswahl: alle außer "N/A" und "k.R." anzeigen
+    if (selectedRatings.length === 0) return true;
+
+    // 4. Nur anzeigen, wenn das vhbRanking zur Auswahl passt
+    return (selectedRatings.includes(vhbRanking) || selectedRatings.includes(abdcRanking));
+  });
+}
 //  Filter: VHB und ABDC Rankings
 function filterABCD(results){
   const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
@@ -632,10 +797,11 @@ function updateList(dataArray) {
           </div>
           <div>
             <button 
+                id="selectBtn-${index}"
                 class="text-sm text-gray-600 hover:text-blue-600"
                 onclick="toggleSelect(${index}, this)"
             >
-                ◯ Select
+                ◯<br>Select
             </button>
           </div>
         </div>

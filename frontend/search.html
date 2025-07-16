@@ -260,6 +260,64 @@
     <div class="bg-white rounded-lg p-6 w-[22rem] shadow-lg max-h-[80vh] overflow-y-auto">
       <h3 class="text-lg font-semibold mb-4">Export Filename</h3>
       <input id="filenameInput" type="text" placeholder="e.g., research_results" class="w-full border rounded p-2 mb-4" />
+            <div class="flex justify-end gap-2 mt-6">
+        <button onclick="closeExportModal()" class="w-full mb-2 px-7 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+        <button onclick="confirmExport()" class="w-full mb-2 py-2 rounded bg-green-600 text-white hover:bg-green-700">Export</button>
+      </div>
+      <div class="mt-4 border-t pt-4">
+      <button
+      type="button"
+      class="w-full text-left font-medium text-gray-700 hover:text-gray-900"
+      onclick="toggleOptions()"
+    >
+    ▾ Options
+    </button>
+
+  <div id="optionsContainer" class="mt-2 space-y-1 hidden">
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="title" /> title
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="date" /> date
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="source" /> source
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="sources" /> sources
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="source_count" /> source_count
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="vhbRanking" /> vhbRanking
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="abdcRanking" /> abdcRanking
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="journal_name" /> journal_name
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="issn" /> issn
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="eissn" /> eissn
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="doi" /> doi
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="url" /> url
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="citations" /> citations
+    </label>
+    <label class="block text-sm">
+      <input type="checkbox" class="mr-2" checked name="exportOption" value="journal_quartile" /> journal_quartile
+    </label>
+  </div>
+</div>
       <div>
         <p class="text-sm font-medium mb-2">Selected Papers:</p>
         <ul id="selectedPapersList" class="space-y-2"></ul>
