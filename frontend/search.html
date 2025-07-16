@@ -255,8 +255,17 @@
       onclick="toggleSelectAll()"
       class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm whitespace-nowrap"
     >
-      Select All
+      add results
     </button>
+    <button
+      onclick="clearSelectedPaper()"
+      class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm whitespace-nowrap"
+    >
+      clear
+    </button>
+    <span id="selectedPaperCount" class="text-sm text-gray-600 font-bold">
+    0 selected
+  </span>
         <ul id="selectedPapersSidebarList" class="space-y-2 text-sm"></ul>
       </div>
 

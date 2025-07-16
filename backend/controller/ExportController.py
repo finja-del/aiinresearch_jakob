@@ -118,6 +118,19 @@ async def export_papers_as_xlsx(request: Request):
     )
 
 
+def normalize_date(value):
+    if pd.isna(value):
+        return None
+    if isinstance(value, (int, float)):
+        return f"{int(value)}-01-01"
+    if isinstance(value, str):
+        try:
+            # Ist es nur ein Jahr wie "2025"?
+            return f"{int(value)}-01-01"
+        except ValueError:
+            return value  # z. B. '2025-06-01'
+    return str(value)
+
 @router.post("/uploadfile")
 async def upload_file_and_process(
         file: UploadFile = File(...),
@@ -139,6 +152,10 @@ async def upload_file_and_process(
         # Excel oder CSV laden
         if suffix == ".xlsx":
             df = pd.read_excel(tmp_path)
+            columns_to_stringify = ['eissn', 'journal_quartile', 'issn', 'doi', 'url', 'title', 'abstract', 'authors', 'journal_name']
+            for col in columns_to_stringify:
+                if col in df.columns:
+                    df[col] = df[col].astype(str).replace("nan", "")
         else:
             # --- CSV einlesen mit automatischer Delimiter-Erkennung  ---
             with open(tmp_path, "r", encoding="utf-8-sig") as fh:
@@ -152,6 +169,10 @@ async def upload_file_and_process(
                 sep = "\t"
             print(f"📑 CSV-Delimiter erkannt: '{sep}'")
             df = pd.read_csv(tmp_path, sep=sep, engine="python")
+            columns_to_stringify = ['eissn', 'journal_quartile', 'issn', 'doi', 'url', 'title', 'abstract', 'authors', 'journal_name']
+            for col in columns_to_stringify:
+                if col in df.columns:
+                    df[col] = df[col].astype(str).replace("nan", "")
 
         # --- Spalten aus Scopus/WoS auf interne Feldnamen mappen ---
         column_aliases = {
@@ -179,7 +200,7 @@ async def upload_file_and_process(
 
         # Falls nur Jahr vorhanden, mache daraus ein ISO-Datum
         if 'date' in df.columns:
-            df['date'] = df['date'].apply(lambda y: f"{int(y)}-01-01" if pd.notna(y) else None)
+            df['date'] = df['date'].apply(normalize_date)
 
         # Filter aus JSON extrahieren
         filter_obj = FilterCriteriaIn(**json.loads(filters))
@@ -204,19 +225,26 @@ async def upload_file_and_process(
             paper_dict["vhbRanking"] = vhb_service.getRanking(journal_title=journal_name, issn=issn)
             paper_dict["abdcRanking"] = abdc_service.getRanking(journal_title=journal_name, issn=issn)
 
-            # Hauptquelle setzen: aus "source" oder "sources"
+            # Quelle und Quellen bereinigen
+            # Quelle und Quellen bereinigen
             if paper_dict.get("source") and paper_dict["source"] not in ["", "ManualUpload"]:
                 pass  # bleibt wie es ist
-            elif paper_dict.get("sources"):
-                if isinstance(paper_dict["sources"], str):
-                    paper_dict["sources"] = [s.strip() for s in paper_dict["sources"].split(",")]
-                if isinstance(paper_dict["sources"], list) and paper_dict["sources"]:
-                    paper_dict["source"] = paper_dict["sources"][0]
-                else:
-                    paper_dict["source"] = ""
             else:
-                paper_dict["source"] = ""
-                paper_dict["sources"] = []
+                sources_raw = paper_dict.get("sources")
+
+                if isinstance(sources_raw, str):
+                    sources = [s.strip() for s in sources_raw.split(",")]
+                elif isinstance(sources_raw, list):
+                    sources = sources_raw
+                elif pd.isna(sources_raw) or sources_raw is None:
+                    sources = []
+                elif isinstance(sources_raw, float) or isinstance(sources_raw, int):
+                    sources = [str(sources_raw)]
+                else:
+                    sources = [str(sources_raw).strip()]
+
+                paper_dict["sources"] = sources
+                paper_dict["source"] = sources[0] if sources else ""
 
             # sources immer als Liste!
             if isinstance(paper_dict.get("sources"), str):

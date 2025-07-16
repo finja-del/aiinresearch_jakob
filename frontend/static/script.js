@@ -37,9 +37,9 @@ function getRankingClass(ranking) {
 let selectedPapers = new Map();
 // zugehörige Paper-Keys generieren
 function generatePaperKey(paper) {
-  const rawString = `${paper.title}|${paper.authors}|${paper.date}|${paper.source}`;
+  const rawString = `${paper.doi}|${paper.citations}|${paper.date}||${paper.authors}|${paper.title}|${paper.source}`;
   const utf8Safe = unescape(encodeURIComponent(rawString)); // UTF-8 → Latin1-kompatibel
-  return btoa(utf8Safe).substring(0, 30);
+  return btoa(utf8Safe).substring(0,1000);
 }
 let publicationData = [];
 let isOfflineMode = false;
@@ -126,7 +126,6 @@ if (modeOnlineBtn && modeOfflineBtn) {
     if (!isOfflineMode) return;
     resetDashboard();
     publicationData = [];
-    selectedPapers.clear();
     isOfflineMode = false;
     modeOnlineBtn.classList.add("bg-blue-600", "text-white");
     modeOnlineBtn.classList.remove("bg-gray-200", "text-blue-800");
@@ -146,7 +145,6 @@ if (modeOnlineBtn && modeOfflineBtn) {
   if (isOfflineMode) return;
   resetDashboard();
   publicationData = [];
-  selectedPapers.clear();
   isOfflineMode = true;
   // ==== Filter zurücksetzen bei Upload/Offline ====
   document.getElementById("vhbCheckbox").checked = false;
@@ -182,7 +180,7 @@ let allSelected = false;
 // ===================================================
 function resetDashboard() {
   publicationData = [];
-  selectedPapers.clear();
+
 
   const container = document.getElementById("resultsContainer");
   if (container) container.innerHTML = "";
@@ -220,6 +218,19 @@ async function init() {
 // ===================================================
 // 📈 Jahr-Chart: Darstellung & Interaktivität
 // ===================================================
+
+function renderExport(){
+  renderSelAllButton();
+  renderSelectedButton();
+  renderSelectedPapersList();
+  renderSelectedPapersSidebar();
+  updateSelectedPaperCount();
+}
+
+function updateSelectedPaperCount() {
+  const count = selectedPapers.size;
+  document.getElementById("selectedPaperCount").innerText = `${count} selected`;
+}
 
 function renderYearChart(data) {
   const yearCounts = {};
@@ -385,13 +396,18 @@ function toggleSelectAll() {
   allSelected = !allSelected;
 
   console.log("Aktuell ausgewählte Paper:", selectedPapers);
-  renderSelectedPapersSidebar();
-  renderSelectedPapersList();
-  renderSelectedButton();
+  renderExport();
 }
+
+function clearSelectedPaper(){
+  selectedPapers.clear();
+  allSelected=false;
+  renderExport();
+}
+
 function renderSelAllButton(){
   const btn = document.getElementById("toggleSelectAllBtn");
-  btn.textContent = !allSelected ? "Select All" : "Deselect All";
+  btn.textContent = !allSelected ? "add results" : "remove results";
 }
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
@@ -402,9 +418,8 @@ function toggleSelect(index, btn) {
     btn.classList.add('text-green-600');
     btn.textContent = '✅\n Selected';
     selectedPapers.set(paperKey, paper);
-    renderSelectedPapersSidebar();
     allSelected = true;
-    renderSelAllButton();
+    renderExport();
   } else {
     btn.classList.remove('text-green-600');
     btn.textContent = '◯\n Select';
@@ -412,8 +427,7 @@ function toggleSelect(index, btn) {
     if(selectedPapers.size === 0){
       allSelected = false;
     }
-    renderSelectedPapersSidebar();
-    renderSelAllButton();
+    renderExport();
   }
 }
 
@@ -423,8 +437,7 @@ function exportPapers() {
     return;
   }
     document.getElementById("exportModal").classList.remove("hidden");
-    renderSelectedPapersList();
-    renderSelectedPapersSidebar();
+    renderExport();
   }
 
   function closeExportModal() {
@@ -534,10 +547,7 @@ function removePaperByKey(key) {
   if(selectedPapers.size === 0){
     allSelected = false;
   }
-  renderSelectedPapersList();
-  renderSelectedPapersSidebar();
-  renderSelectedButton();
-  renderSelAllButton();
+  renderExport();
 }
 
 // ===================================================
@@ -727,7 +737,8 @@ async function performSearch() {
 
     // WICHTIG: Nur noch die lokalen Filter anwenden!
     publicationData = data; // → alle API-Ergebnisse
-
+    allSelected = false;
+    renderExport();
     // Hier werden nur noch minSources und Ranking angewendet (egal ob Online/Offline)
     const filtered = updateList(publicationData);
     renderYearChart(filtered);
@@ -857,8 +868,8 @@ function updateList(dataArray) {
           </div>
           <button 
             class="text-sm text-blue-600 hover:underline" 
-            onclick="window.open('${result.url}', '_blank')" 
-            ${!result.url ? 'disabled title="No link available"' : ''}
+            onclick="window.open('${result.doi}', '_blank')" 
+            ${!result.doi ? 'disabled title="No link available"' : ''}
           >
             🔗 View
           </button>
@@ -918,6 +929,8 @@ async function processUploadedFile() {
     });
 
     const data = response.data;
+    allSelected= false;
+    renderExport();
     if (!Array.isArray(data) || data.length === 0) {
       container.innerHTML = "<p class='text-red-500'>Keine passenden Paper gefunden.</p>";
       // Intro trotzdem zeigen, da leer
