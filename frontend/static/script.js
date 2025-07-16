@@ -55,7 +55,14 @@ const searchBtn = document.querySelector('button[onclick="performSearch()"]');
 const processBtn = document.getElementById("processUploadBtn");
 
 function updateModeUI() {
+  // === Dropzone & UploadInput ===
+  const dropzone = document.getElementById("dropzone");
+  const uploadInput = document.getElementById("uploadInput");
+  // === SourceCheckboxes (Sidebar) ===
+  const sourceCheckboxes = document.querySelectorAll(".sourceCheckbox");
+
   if (isOfflineMode) {
+    // Disable search, enable process
     if (searchBtn) {
       searchBtn.disabled = true;
       searchBtn.classList.add("opacity-60", "pointer-events-none");
@@ -65,7 +72,20 @@ function updateModeUI() {
       processBtn.disabled = false;
       processBtn.classList.remove("opacity-60", "pointer-events-none");
     }
+    // Dropzone: aktivieren
+    if (dropzone) {
+      dropzone.classList.remove("opacity-60", "pointer-events-none");
+    }
+    if (uploadInput) {
+      uploadInput.disabled = false;
+    }
+    // Sidebar-Checkboxen deaktivieren
+    sourceCheckboxes.forEach(cb => {
+      cb.disabled = true;
+      cb.classList.add("opacity-60", "pointer-events-none");
+    });
   } else {
+    // Enable search, disable process
     if (searchBtn) {
       searchBtn.disabled = false;
       searchBtn.classList.remove("opacity-60", "pointer-events-none");
@@ -75,6 +95,18 @@ function updateModeUI() {
       processBtn.disabled = true;
       processBtn.classList.add("opacity-60", "pointer-events-none");
     }
+    // Dropzone: deaktivieren
+    if (dropzone) {
+      dropzone.classList.add("opacity-60", "pointer-events-none");
+    }
+    if (uploadInput) {
+      uploadInput.disabled = true;
+    }
+    // Sidebar-Checkboxen aktivieren
+    sourceCheckboxes.forEach(cb => {
+      cb.disabled = false;
+      cb.classList.remove("opacity-60", "pointer-events-none");
+    });
   }
 }
 
