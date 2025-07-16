@@ -54,6 +54,16 @@ const searchInput = document.getElementById("searchInput");
 const searchBtn = document.querySelector('button[onclick="performSearch()"]');
 const processBtn = document.getElementById("processUploadBtn");
 
+function showDragnDrop() {
+  document.getElementById("uploadHeading")?.classList.remove("hidden");
+  document.getElementById("dropzone")?.classList.remove("hidden");
+}
+
+function hideDragnDrop() {
+  document.getElementById("uploadHeading")?.classList.add("hidden");
+  document.getElementById("dropzone")?.classList.add("hidden");
+}
+
 function updateModeUI() {
   // === Dropzone & UploadInput ===
   const dropzone = document.getElementById("dropzone");
@@ -381,9 +391,7 @@ function toggleSelectAll() {
 }
 function renderSelAllButton(){
   const btn = document.getElementById("toggleSelectAllBtn");
-  btn.textContent = allSelected ? "Select All" : "Deselect All";
-
-  allSelected = !allSelected;
+  btn.textContent = !allSelected ? "Select All" : "Deselect All";
 }
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
@@ -401,7 +409,7 @@ function toggleSelect(index, btn) {
     btn.classList.remove('text-green-600');
     btn.textContent = '◯\n Select';
     selectedPapers.delete(paperKey);
-    if(selectedPapers.length === 0){
+    if(selectedPapers.size === 0){
       allSelected = false;
     }
     renderSelectedPapersSidebar();
@@ -523,7 +531,7 @@ function renderSelectedPapersSidebar() {
 // Funktion zum Entfernen eines Papers aus der Liste
 function removePaperByKey(key) {
   selectedPapers.delete(key);
-  if(selectedPapers.length === 0){
+  if(selectedPapers.size === 0){
     allSelected = false;
   }
   renderSelectedPapersList();
@@ -777,7 +785,7 @@ function updateList(dataArray) {
     }
     return true; // Zeige alles, wenn keine Einschränkung
   });
-
+   publicationData = filtered;
   // Rendering wie gehabt:
   const container = document.getElementById("resultsContainer");
   if (!container) return;
