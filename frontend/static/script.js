@@ -589,28 +589,28 @@ function updateList(dataArray) {
 
     // 3. Neue gewünschte Ranking-Filter-Logik:
     if (!vhbEnabled && !abdcEnabled) {
-      // KEINE Checkboxen aktiv: ALLES anzeigen!
       if (selectedRatings.length === 0) return true;
-      // Sonst: Eines von beiden muss im Filter sein, KEIN N/A
       const vhbOk = vhb !== "N/A" && vhb !== "k.R." && selectedRatings.includes(vhb);
       const abdcOk = abdc !== "N/A" && selectedRatings.includes(abdc);
       return vhbOk || abdcOk;
     }
     if (vhbEnabled && !abdcEnabled) {
-      // Nur VHB aktiv: VHB muss gesetzt und im Filter sein, KEIN N/A
-      return vhb !== "N/A" && vhb !== "k.R." && selectedRatings.includes(vhb);
+      if (vhb === "N/A" || vhb === "k.R.") return false;
+      if (selectedRatings.length === 0) return true;
+      return selectedRatings.includes(vhb);
     }
     if (!vhbEnabled && abdcEnabled) {
-      // Nur ABDC aktiv: ABDC muss gesetzt und im Filter sein, KEIN N/A
-      return abdc !== "N/A" && selectedRatings.includes(abdc);
+      if (abdc === "N/A") return false;
+      if (selectedRatings.length === 0) return true;
+      return selectedRatings.includes(abdc);
     }
     if (vhbEnabled && abdcEnabled) {
-      // BEIDE Checkboxen aktiv: Beide Rankings müssen gültig UND im Filter sein
-      const vhbMatch = vhb !== "N/A" && vhb !== "k.R." && selectedRatings.includes(vhb);
-      const abdcMatch = abdc !== "N/A" && selectedRatings.includes(abdc);
-      return vhbMatch && abdcMatch;
+      if (vhb === "N/A" || vhb === "k.R." || abdc === "N/A") return false;
+      if (selectedRatings.length === 0) return true;
+      // HIER: Beide Rankings müssen im Rating-Set sein!
+      return selectedRatings.includes(vhb) && selectedRatings.includes(abdc);
     }
-    return true; // fallback
+    return true;
   });
 
   // Rendering wie gehabt:
