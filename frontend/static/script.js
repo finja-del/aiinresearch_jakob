@@ -280,14 +280,14 @@ function toggleSelect(index, btn) {
     btn.textContent = '✅\n Selected';
     selectedPapers.set(paperKey, paper);
     renderSelectedPapersSidebar();
-    allSelected = false;
+    allSelected = true;
     renderSelAllButton();
   } else {
     btn.classList.remove('text-green-600');
     btn.textContent = '◯\n Select';
     selectedPapers.delete(paperKey);
     if(selectedPapers.length === 0){
-      allSelected = true;
+      allSelected = false;
     }
     renderSelectedPapersSidebar();
     renderSelAllButton();
@@ -324,9 +324,22 @@ function renderSelectedPapersList() {
     li.className = "flex justify-between items-center text-sm bg-gray-100 px-3 py-2 rounded";
 
     li.innerHTML = `
-      <span class="truncate max-w-[200px]" title="${paper.title}">${paper.title}</span>
-      <button onclick="removePaperByKey('${key}')" class="text-red-500 hover:text-red-1000 text-sm font-bold">–</button>
-    `;
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
+    <div class="flex flex-col sm:max-w-[80%]">
+      <span class="font-medium truncate" title="${paper.title}">${paper.title}</span>
+      <div class="flex flex-row justify-between text-xs text-gray-600 w-full">
+        <span class="truncate" title="${paper.journal_name}">
+          ${paper.journal_name || "Unknown Journal"}
+        </span>
+        <span class="ml-4 whitespace-nowrap">${paper.date?.split("-")[0] || "—"}</span>
+      </div>
+    </div>
+    <button onclick="removePaperByKey('${key}')" 
+            class="text-red-700 hover:text-red-700 text-sm font-bold ml-4 mt-2 sm:mt-0">
+      – 
+    </button>
+  </div>
+`;
 
     list.appendChild(li);
   }
@@ -371,9 +384,22 @@ function renderSelectedPapersSidebar() {
     li.className = "flex justify-between items-center text-sm bg-gray-100 px-3 py-2 rounded";
 
     li.innerHTML = `
-      <span class="truncate max-w-[160px]" title="${paper.title}">${paper.title}</span>
-      <button onclick="removePaperByKey('${key}')" class="text-red-500 hover:text-red-700 text-sm font-bold">–</button>
-    `;
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
+    <div class="flex flex-col sm:max-w-[80%]">
+      <span class="font-medium truncate" title="${paper.title}">${paper.title}</span>
+      <div class="flex flex-row justify-between text-xs text-gray-600 w-full">
+        <span class="truncate" title="${paper.journal_name}">
+          ${paper.journal_name || "Unknown Journal"}
+        </span>
+        <span class="ml-4 whitespace-nowrap">${paper.date?.split("-")[0] || "—"}</span>
+      </div>
+    </div>
+    <button onclick="removePaperByKey('${key}')" 
+            class="text-red-700 hover:text-red-700 text-sm font-bold ml-4 mt-2 sm:mt-0">
+      – 
+    </button>
+  </div>
+`;
 
     list.appendChild(li);
   }
@@ -383,7 +409,7 @@ function renderSelectedPapersSidebar() {
 function removePaperByKey(key) {
   selectedPapers.delete(key);
   if(selectedPapers.length === 0){
-    allSelected = true;
+    allSelected = false;
   }
   renderSelectedPapersList();
   renderSelectedPapersSidebar();
@@ -618,7 +644,7 @@ const rankingOrder = ["A*", "A+", "A", "B", "C", "D", "N/A", "k.R."];
     updateList(publicationData);
     renderYearChart(publicationData);
     renderDashboard();
-    allSelected = true;
+    allSelected = false;
     renderSelAllButton();
   } catch (err) {
     alert(err.message);
