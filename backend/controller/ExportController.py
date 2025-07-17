@@ -152,7 +152,11 @@ async def upload_file_and_process(
         # Excel oder CSV laden
         if suffix == ".xlsx":
             df = pd.read_excel(tmp_path)
-            columns_to_stringify = ['eissn', 'journal_quartile', 'issn', 'doi', 'url', 'title', 'abstract', 'authors', 'journal_name']
+            columns_to_stringify = [
+            'title', 'authors', 'abstract', 'date', 'source', 'sources',
+            'vhbRanking', 'abdcRanking', 'journal_name', 'issn', 'eissn',
+            'doi', 'url', 'citations', 'journal_quartile'
+             ]
             for col in columns_to_stringify:
                 if col in df.columns:
                     df[col] = df[col].astype(str).replace("nan", "")
@@ -169,7 +173,11 @@ async def upload_file_and_process(
                 sep = "\t"
             print(f"📑 CSV-Delimiter erkannt: '{sep}'")
             df = pd.read_csv(tmp_path, sep=sep, engine="python")
-            columns_to_stringify = ['eissn', 'journal_quartile', 'issn', 'doi', 'url', 'title', 'abstract', 'authors', 'journal_name']
+            columns_to_stringify = [
+            'title', 'authors', 'abstract', 'date', 'source', 'sources',
+            'vhbRanking', 'abdcRanking', 'journal_name', 'issn', 'eissn',
+            'doi', 'url', 'citations', 'journal_quartile'
+             ]
             for col in columns_to_stringify:
                 if col in df.columns:
                     df[col] = df[col].astype(str).replace("nan", "")
@@ -204,7 +212,10 @@ async def upload_file_and_process(
 
         # Filter aus JSON extrahieren
         filter_obj = FilterCriteriaIn(**json.loads(filters))
-        selected_ratings = set((filter_obj.rating or []) + (filter_obj.ranking or []))
+        # defensive handling falls rating oder ranking kein list ist
+        rating = filter_obj.rating if isinstance(filter_obj.rating, list) else []
+        ranking = filter_obj.ranking if isinstance(filter_obj.ranking, list) else []
+        selected_ratings = set(rating + ranking)
 
         PAPERDTO_FIELDS = [
             'title', 'authors', 'abstract', 'date', 'source', 'sources', 'source_count',
@@ -247,13 +258,15 @@ async def upload_file_and_process(
                 paper_dict["source"] = sources[0] if sources else ""
 
             # sources immer als Liste!
-            if isinstance(paper_dict.get("sources"), str):
-                paper_dict["sources"] = [s.strip() for s in paper_dict["sources"].split(",")]
-            elif not paper_dict.get("sources"):
+            # Absicherung: falls sources leer, baue sie aus source
+            if not paper_dict.get("sources"):
                 paper_dict["sources"] = [paper_dict["source"]] if paper_dict["source"] else []
 
             paper_dict["source_count"] = len(set(paper_dict["sources"]))
-
+            # Als Schutz: Ersetze alle floats, die keine NaN sind, durch Strings
+            for key, val in paper_dict.items():
+                if isinstance(val, float) and not pd.isna(val):
+                    paper_dict[key] = str(val)
             papers.append(PaperDTO(**paper_dict))
 
         print("📄 Erzeugte PaperDTOs:", len(papers))
@@ -272,6 +285,8 @@ async def upload_file_and_process(
         def clean_dict(obj):
             if isinstance(obj, dict):
                 return {k: clean_dict(v) for k, v in obj.items()}
+            elif hasattr(obj, "__dict__"):
+                return clean_dict(obj.__dict__)
             elif isinstance(obj, float) and math.isnan(obj):
                 return None
             elif isinstance(obj, list):
