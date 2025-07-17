@@ -284,13 +284,13 @@ function findMissingEntries(array, controlArray) {
 //Exportieren der Chart-Daten als CSV
  async function downloadPapers() {
     if (selectedPapers.size === 0) {
-        alert("Bitte wählen mindestens ein Paper aus, um es zu exportieren.");
+        alert("Please select at least 1 paper to export.");
         return;
     }
     const selectedFields = getSelectedExportFields();
     const controlFields = ['title','date', 'source', 'sources', 'source_count', 'vhbRanking', 'abdcRanking', 'journal_name', 'issn', 'eissn', 'doi', 'url', 'citations', 'journal_quartile']
     const excludedFields = findMissingEntries(selectedFields,controlFields)
-    console.log("Exportiere nur diese Felder:", selectedFields);
+    console.log("Export only the following fields:", selectedFields);
     try {
         // Annahme: publicationData enthält die PaperDTO-Liste
 
@@ -411,7 +411,7 @@ function clearSelectedPaper(){
 
 function renderSelAllButton(){
   const btn = document.getElementById("toggleSelectAllBtn");
-  btn.textContent = !allSelected ? "add results" : "remove results";
+  btn.textContent = !allSelected ? "Add current results" : "Clear current results";
 }
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {

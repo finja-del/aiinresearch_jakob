@@ -88,7 +88,8 @@
       <label class="block mb-4"><input type="checkbox" class="sourceCheckbox mr-2" value="Scopus" checked /> Scopus</label>
 
       <!-- Min. Sources -->
-      <p class="block mt-6 mb-2 text-sm font-medium">Min. sources</p>
+      <p class="block mt-6 mb-2 text-sm font-medium">Found in at least x sources
+      </p>
       <select id="minSources" class="p-2 border rounded bg-white text-sm w-full mb-4">
         <option value="1">All</option>
         <option value="2">≥ 2 sources</option>
@@ -96,7 +97,7 @@
       </select>
 
       <!-- Year Chart -->
-      <p class="block mb-2 text-sm font-medium">Year (click to select)</p>
+      <p class="block mb-2 text-sm font-medium">Year Range</p>
       <div class="flex items-center gap-2 mb-6">
         <label class="text-sm">From</label>
         <input id="yearFrom" type="number" class="p-2 border rounded text-sm w-[66px]" />
@@ -109,19 +110,21 @@
   <div class="flex">
     <div class="w-1/2 pr-4 border-r border-gray-300">
       <p class="block mb-2 text-sm font-medium flex items-center gap-1 relative group">
-        Journal Ranking
+        Ranking
         <span class="text-blue-600 cursor-pointer">ℹ️</span>
         <span
           class="absolute z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 w-52 -top-2 left-20 shadow-lg"
         >
-          Based on the VHB and ABDC rankings from 2022
+          Based on versions:<br />
+          VHB (2022)<br />
+          ABDC (2022)
         </span>
       </p>
       <label class="block mb-1"><input id="vhbCheckbox" type="checkbox" value="vhb" /> VHB</label>
       <label class="block mb-1"><input id="abdcCheckbox" type="checkbox" value="abdc" /> ABDC</label>
     </div>
     <div class="w-1/2 pl-4">
-      <p class="block mb-2 text-sm font-medium">Rating</p>
+      <p class="block mb-2 text-sm font-medium">Journal Ranking</p>
       <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A*/A+" /> A* / A+</label>
       <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="A" /> A</label>
       <label class="block mb-1"><input type="checkbox" class="ratingCheckbox mr-2" value="B" /> B</label>
@@ -167,7 +170,7 @@
             <option value="">Sort</option>
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
-            <option value="combined-ranking">Journal Ranking (VHB/ABDC)</option>
+            <option value="combined-ranking">Highest Ranking</option>
             </select>
 
           <button
@@ -204,7 +207,7 @@
           </div>
           <!-- Zeile 2 -->
           <div class="flex flex-col justify-center min-h-[92px]">
-            <p class="text-gray-500">Datasources</p>
+            <p class="text-gray-500">Sources</p>
             <div id="sources" class="text-sm font-medium text-gray-900 space-y-1 break-words">—</div>
           </div>
           <div class="flex flex-col justify-center min-h-[92px]">
@@ -216,7 +219,7 @@
 
                   <div id="introLegend"
           class="p-6 my-6 bg-blue-50 border border-blue-200 rounded-xl shadow w-full max-w-3xl mx-auto">
-        <h3 class="text-lg font-bold text-blue-900 mb-3">How to use this Application</h3>
+        <h3 class="text-lg font-bold text-blue-900 mb-3">How to use this application</h3>
 
         <!-- Bestehende Rating-Badges -->
         <div class="mb-4">
@@ -248,7 +251,7 @@
 
         <!-- Neuer Tip -->
         <p class="text-gray-700 text-sm mb-3">
-          <strong>Tip:</strong> This application offers two modes: <strong>Online</strong> to search papers from datasources, and <strong>Upload</strong> to analyze your own paper lists.
+          <strong>Tip:</strong> This application offers two modes: <strong>Online</strong> to search papers from sources, and <strong>Upload</strong> to analyze your own paper lists.
         </p>
 
         <!-- Dynamischer Content für Step-by-Step Anleitung -->
@@ -286,13 +289,13 @@
       onclick="toggleSelectAll()"
       class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm whitespace-nowrap"
     >
-      add results
+      Add current Results
     </button>
     <button
       onclick="clearSelectedPaper()"
       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm whitespace-nowrap"
     >
-      clear
+      Clear All
     </button>
     <span id="selectedPaperCount" class="text-sm text-gray-600 font-bold">
     0 selected
