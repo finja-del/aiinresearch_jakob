@@ -411,7 +411,7 @@ function clearSelectedPaper(){
 
 function renderSelAllButton(){
   const btn = document.getElementById("toggleSelectAllBtn");
-  btn.textContent = !allSelected ? "Add current results" : "Clear current results";
+  btn.textContent = !allSelected ? "Add current" : "Clear current";
 }
 //toggleSelect-Funktion: Markieren/Entmarkieren von Papers
 function toggleSelect(index, btn) {
