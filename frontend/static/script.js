@@ -757,7 +757,8 @@ async function performSearch() {
 // Neue Funktion: Filter anwenden und Cards rendern
 function updateList(dataArray) {
   const minSources = Number(document.getElementById("minSources")?.value) || 1;
-
+  const yearFrom = parseInt(document.getElementById("yearFrom").value);
+  const yearTo = parseInt(document.getElementById("yearTo").value);
   const vhbEnabled = document.getElementById("vhbCheckbox").checked;
   const abdcEnabled = document.getElementById("abdcCheckbox").checked;
   const selectedRatings = Array.from(document.querySelectorAll(".ratingCheckbox"))
@@ -775,7 +776,13 @@ function updateList(dataArray) {
 
     const vhb = (paper.vhbRanking || "").trim();
     const abdc = (paper.abdcRanking || "").trim();
+    const date = paper.date;
+    if (date) {
+      const year = parseInt(date.toString().slice(0, 4)); // Extrahiere das Jahr
 
+      if (!isNaN(yearFrom) && year < yearFrom) return false;
+      if (!isNaN(yearTo) && year > yearTo) return false;
+    }
     // 2. Ranking-Filter
     if (vhbEnabled && abdcEnabled) {
       // Beide Rankings müssen gesetzt und gültig sein!
@@ -855,7 +862,6 @@ function updateList(dataArray) {
         </div>
         <div id="${extraId}" class="hidden text-sm text-gray-700 mb-4">
           <p>
-            <strong>URL:</strong> ${result.url ? `<a href="${result.url}" target="_blank" class="text-blue-600 underline">${result.url}</a>` : "N/A"}<br>
             <strong>ISSN:</strong> ${result.issn || "N/A"}<br>
             <strong>eISSN:</strong> ${result.eISSN || "N/A"}<br>
             <strong>DOI:</strong> ${result.doi ? `<a href="${result.doi}" target="_blank" class="text-blue-600 underline">${result.doi}</a>` : "N/A"}<br>
@@ -933,6 +939,7 @@ async function processUploadedFile() {
     });
 
     const data = response.data;
+    publicationData = data;
     allSelected= false;
     renderExport();
     if (!Array.isArray(data) || data.length === 0) {
