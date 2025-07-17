@@ -57,11 +57,15 @@ const processBtn = document.getElementById("processUploadBtn");
 function showDragnDrop() {
   document.getElementById("uploadHeading")?.classList.remove("hidden");
   document.getElementById("dropzone")?.classList.remove("hidden");
+  updateLegendContent('upload');
+
 }
 
 function hideDragnDrop() {
   document.getElementById("uploadHeading")?.classList.add("hidden");
   document.getElementById("dropzone")?.classList.add("hidden");
+  updateLegendContent('online');
+
 }
 
 function updateModeUI() {
@@ -1019,4 +1023,79 @@ document.getElementById("resetToOnlineBtn")?.addEventListener("click", () => {
   document.getElementById("searchInput").value = "";
   performSearch();
 });
+
+function switchToOnlineFromLegend() {
+  hideDragnDrop(); // aktiviert Online-Modus
+  updateLegendContent('online'); // zeigt Online-Anleitung
+  syncSidebarButtons('online'); // Sidebar-Buttons synchronisieren
+}
+
+function switchToUploadFromLegend() {
+  showDragnDrop(); // aktiviert Upload-Modus
+  updateLegendContent('upload'); // zeigt Upload-Anleitung
+  syncSidebarButtons('upload'); // Sidebar-Buttons synchronisieren
+}
+
+function updateLegendContent(mode) {
+  const content = document.getElementById('legendContent');
+  if (mode === 'online') {
+    content.innerHTML = `
+          <ol class="list-decimal list-inside text-gray-700 text-sm space-y-1">
+      <li>Enter a keyword or research topic in the search bar at the top.</li>
+      <li>Click <strong>Search</strong> to fetch papers from multiple datasources.</li>
+      <li>Use filters in the sidebar to narrow down results by rating, source, or year.</li>
+      <li>Check each paper’s VHB/ABDC ranking badge to assess journal quality.</li>
+      <li>Select your desired papers and export them as a list for further use.</li>
+     </ol>
+    `;
+    highlightActiveButton('online');
+  } else if (mode === 'upload') {
+    content.innerHTML = `
+            <ol class="list-decimal list-inside text-gray-700 text-sm space-y-1">
+        <li>Drag & drop a CSV/XLSX file into the upload area or click to browse files.</li>
+        <li>Upload your file and let the tool enrich it with journal rankings.</li>
+        <li>Review your list of papers, now enhanced with VHB/ABDC rankings for quality insights.</li>
+        <li>Apply filters in the sidebar to sort and narrow down your list.</li>
+        <li>Select papers and export them just like in Online mode.</li>
+      </ol>
+    `;
+    highlightActiveButton('upload');
+  }
+}
+
+function highlightActiveButton(mode) {
+  const onlineBtn = document.getElementById('legendOnlineBtn');
+  const uploadBtn = document.getElementById('legendUploadBtn');
+  if (mode === 'online') {
+    onlineBtn.classList.add('bg-blue-600', 'text-white');
+    onlineBtn.classList.remove('bg-gray-200', 'text-blue-800');
+    uploadBtn.classList.add('bg-gray-200', 'text-blue-800');
+    uploadBtn.classList.remove('bg-blue-600', 'text-white');
+  } else {
+    uploadBtn.classList.add('bg-blue-600', 'text-white');
+    uploadBtn.classList.remove('bg-gray-200', 'text-blue-800');
+    onlineBtn.classList.add('bg-gray-200', 'text-blue-800');
+    onlineBtn.classList.remove('bg-blue-600', 'text-white');
+  }
+}
+
+function syncSidebarButtons(mode) {
+  const sidebarOnlineBtn = document.getElementById('modeOnlineBtn');
+  const sidebarUploadBtn = document.getElementById('modeOfflineBtn');
+  if (mode === 'online') {
+    sidebarOnlineBtn.classList.add('bg-blue-600', 'text-white', 'opacity-1');
+    sidebarOnlineBtn.classList.remove('bg-gray-200', 'text-blue-800', 'opacity-0.7');
+    sidebarUploadBtn.classList.add('bg-gray-200', 'text-blue-800', 'opacity-0.7');
+    sidebarUploadBtn.classList.remove('bg-blue-600', 'text-white', 'opacity-1');
+  } else {
+    sidebarUploadBtn.classList.add('bg-blue-600', 'text-white', 'opacity-1');
+    sidebarUploadBtn.classList.remove('bg-gray-200', 'text-blue-800', 'opacity-0.7');
+    sidebarOnlineBtn.classList.add('bg-gray-200', 'text-blue-800', 'opacity-0.7');
+    sidebarOnlineBtn.classList.remove('bg-blue-600', 'text-white', 'opacity-1');
+  }
+}
+
+// 🆕 Standardmäßig Online-Anleitung aktivieren
+updateLegendContent('online');
+
 
