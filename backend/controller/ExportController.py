@@ -194,6 +194,10 @@ async def upload_file_and_process(
             '"Abstract"': 'abstract',
             'Year': 'date',
             '"Year"': 'date',
+            'Source': 'source',
+            '"Source"': 'source',
+            'SOURCE': 'source',
+            ' source': 'source',
             'Source title': 'journal_name',
             '"Source title"': 'journal_name',
             'DOI': 'doi',
@@ -235,6 +239,10 @@ async def upload_file_and_process(
             journal_name = paper_dict.get("journal_name") or ""
             paper_dict["vhbRanking"] = vhb_service.getRanking(journal_title=journal_name, issn=issn)
             paper_dict["abdcRanking"] = abdc_service.getRanking(journal_title=journal_name, issn=issn)
+
+            doi = paper_dict.get("doi", "")
+            if doi and not str(doi).startswith("http"):
+                paper_dict["doi"] = f"https://doi.org/{doi}"
 
             # Quelle und Quellen bereinigen
             # Quelle und Quellen bereinigen
