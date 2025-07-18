@@ -234,18 +234,7 @@
             <strong>Ranking colors:</strong> Each badge color shows the VHB or ABDC journal ranking. Use the <strong>filters</strong> on the left to narrow your results by ranking, source, or year.
           </p>
         <!-- Modus-Buttons in der Legende -->
-        <div class="flex justify-center space-x-3 mb-4">
-          <button id="legendOnlineBtn"
-                  onclick="switchToOnlineFromLegend()"
-                  class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
-            Online
-          </button>
-          <button id="legendUploadBtn"
-                  onclick="switchToUploadFromLegend()"
-                  class="px-4 py-2 rounded-lg bg-gray-200 text-blue-800 font-semibold hover:bg-blue-300 transition">
-            Upload
-          </button>
-        </div>
+ 
 
         
 
@@ -297,9 +286,11 @@
     >
       Clear All
     </button>
+    <div>
     <span id="selectedPaperCount" class="text-sm text-gray-600 font-bold">
     0 selected
   </span>
+    </div>
         <ul id="selectedPapersSidebarList" class="space-y-2 text-sm"></ul>
       </div>
 

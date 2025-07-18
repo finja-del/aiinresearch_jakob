@@ -233,7 +233,7 @@ function renderExport(){
 
 function updateSelectedPaperCount() {
   const count = selectedPapers.size;
-  document.getElementById("selectedPaperCount").innerText = `${count} selected`;
+  document.getElementById("selectedPaperCount").innerText = `<br>${count} selected`;
 }
 
 function renderYearChart(data) {
