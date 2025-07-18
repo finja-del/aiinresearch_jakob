@@ -41,6 +41,7 @@ function generatePaperKey(paper) {
   const utf8Safe = unescape(encodeURIComponent(rawString)); // UTF-8 → Latin1-kompatibel
   return btoa(utf8Safe).substring(0,1000);
 }
+let uploadDummy =[]
 let publicationData = [];
 let isOfflineMode = false;
 let yearChart;
@@ -122,7 +123,7 @@ function updateModeUI() {
       cb.classList.remove("opacity-60", "pointer-events-none");
     });
   }
-}
+
 
 if (modeOnlineBtn && modeOfflineBtn) {
 
@@ -170,9 +171,8 @@ if (modeOnlineBtn && modeOfflineBtn) {
   document.getElementById("uploadInput")?.focus();
 });
 
-
-updateModeUI();
-
+}
+  updateModeUI();
 // Min. Quellen Filter
 let minSources = 1;    // 1 = alle, 2 = zweifach, 3 = dreifach
 let lastResults = [];  // speichert API-Ergebnisse
@@ -235,7 +235,23 @@ function updateSelectedPaperCount() {
   const count = selectedPapers.size;
   document.getElementById("selectedPaperCount").innerText = `${count} selected`;
 }
+function updateSelectedButtons() {
+  if (!Array.isArray(publicationData)) return;
 
+  publicationData.forEach((paper, index) => {
+    const paperKey = generatePaperKey(paper);
+    const btn = document.getElementById(`selectBtn-${index}`);
+    if (!btn) return;
+
+    if (selectedPapers.has(paperKey)) {
+      btn.classList.add('text-green-600');
+      btn.textContent = '✅\n Selected';
+    } else {
+      btn.classList.remove('text-green-600');
+      btn.textContent = '◯\n Select';
+    }
+  });
+}
 function renderYearChart(data) {
   const yearCounts = {};
 
@@ -740,6 +756,7 @@ async function performSearch() {
     if (legendEl) legendEl.style.display = "none";
 
     // WICHTIG: Nur noch die lokalen Filter anwenden!
+    uploadDummy = data;
     publicationData = data; // → alle API-Ergebnisse
     allSelected = false;
     renderExport();
@@ -887,6 +904,7 @@ function updateList(dataArray) {
       </div>
     `;
   });
+  updateSelectedButtons();
   return filtered;
 }
 
@@ -940,6 +958,7 @@ async function processUploadedFile() {
 
     const data = response.data;
     publicationData = data;
+    uploadDummy = data;
     allSelected= false;
     renderExport();
     if (!Array.isArray(data) || data.length === 0) {
@@ -976,7 +995,7 @@ async function processUploadedFile() {
 
 function applyFilters() {
   if (isOfflineMode) {
-    const filtered = updateList(publicationData);
+    const filtered = updateList(uploadDummy);
     renderYearChart(filtered);
     renderDashboard(filtered);
   } else {
